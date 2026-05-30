@@ -1,0 +1,65 @@
+# System Patterns
+
+This file records architectural patterns, standards, and conventions that span the codebase. Specific decisions live as ADRs in [architecture-decisions/](architecture-decisions/); patterns here describe how the system is composed.
+
+## Architectural Principles (from charter)
+- **AP-1** — Memory is the product. Everything else supports memory.
+- **AP-2** — Evidence before inference. All generated outputs carry source references.
+- **AP-3** — Offline-first. Cloud-enhanced. Never cloud-dependent.
+- **AP-4** — Human-in-control. AI recommends; humans decide.
+- **AP-5** — Composable modules. No tightly coupled subsystems.
+- **AP-6** — Long-term ownership. Avoid vendor lock-in.
+
+## Ratified Architecture Decisions
+| ADR | Title | Status |
+|---|---|---|
+| [ADR-001](architecture-decisions/ADR-001-charter-ratification.md) | Charter ratification | Accepted |
+| [ADR-002](architecture-decisions/ADR-002-technology-stack.md) | Technology stack | Accepted |
+| [ADR-003](architecture-decisions/ADR-003-repo-and-branching.md) | Repository layout and branching | Accepted |
+
+## Cross-cutting Patterns
+
+### Modularity contract
+- **Hard limit: 300 lines per source file.** A file exceeding this is split — domain by domain, not arbitrarily.
+- One module = one responsibility. `goal_service.py`, `calendar_service.py`, not `services.py`.
+- Public surface of each package is declared in `__init__.py`; nothing else is re-exported.
+
+### Observability contract
+Every request-handling code path emits:
+- **One OpenTelemetry trace** (root span on the request, child spans on internal stages).
+- **One Prometheus counter increment** keyed by route + outcome.
+- **One structured log line** per stage of interest, with `trace_id` correlation.
+- **Langfuse span** for any LLM call (Phase 3+).
+
+Local development uses console exporters; production uses OTLP endpoints + Prometheus scrape + Langfuse SDK. See `packages/observability/`.
+
+### Evidence-before-inference pattern
+Any service that returns a generated artifact (summary, answer, lesson, recommendation) must also return:
+- A non-empty list of source references (record IDs + content hashes).
+- A reasoning trace summary the user can inspect.
+- A confidence signal (categorical, not a fabricated float).
+
+The API layer refuses to serve generated responses that omit sources (fail closed).
+
+### Offline-first pattern (AP-3)
+LLM runtime, embedding generation, and retrieval all expose a unified interface with at least one offline-capable implementation (Ollama for LLM, local embedding model for vectors, local pgvector for storage). Cloud providers are opt-in via configuration; never the default.
+
+### Auditability pattern
+Every write path (ingest, status change, lesson supersession, role grant) appends to an immutable audit log with: actor, action, prior_state, new_state, timestamp, reason. The audit log is itself a memory record and is queryable.
+
+## Standards
+- **Language:** Python 3.12 for backend; TypeScript 5.x for frontend (Phase 4+); SQL for storage.
+- **Style:** `ruff` for Python lint+format; `prettier` for TS/JS/Markdown.
+- **Types:** strict typing (`mypy --strict` or `basedpyright`); no `Any` without a comment justifying it.
+- **Tests:** integration tests against a real Postgres (no DB mocks — per global feedback memory).
+- **Commits:** conventional commits; PRs reference the ADR they implement or the phase exit criterion they satisfy.
+- **Docs:** every public function has a one-line docstring; complex invariants explained in module-level docstring.
+
+## Patterns Deferred to Later Phases
+- Ingestion + provenance pattern → Phase 2.
+- LLM-runtime abstraction → Phase 3.
+- Hybrid retrieval + citation pattern → Phase 4.
+- Execution + traceability pattern → Phase 5.
+- Reflection + lesson register pattern → Phase 6.
+- RBAC + tenancy pattern → Phase 7.
+- Release pattern (eval-gated, SLO-monitored) → Phase 8.
