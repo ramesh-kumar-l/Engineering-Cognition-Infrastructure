@@ -3,22 +3,29 @@
 > **Read this first.** This file is the current "save state" of the project. It is updated at the end of every major feature and at every phase transition.
 
 ## Current Phase
-**Phase 4 — Engineering Memory** *(unblocked; not yet started)*.
+**Phase 5 — Execution Intelligence** *(unblocked; not yet started)*.
 
-Phase 1 (Foundation) and Phase 2 (Knowledge Capture) are complete. See [implementation-status.md](implementation-status.md) for the exit-criteria checklist.
+Phases 1–4 are complete. See [implementation-status.md](implementation-status.md) for the exit-criteria checklist.
 
 ## Current Sprint Goal
-*(Phase 4 sprint begins on next approval — see [master-roadmap.md § Phase 4](roadmaps/master-roadmap.md))*
+*(Phase 5 sprint begins on next approval — see [master-roadmap.md § Phase 5](roadmaps/master-roadmap.md))*
 
 Planned scope:
-- pgvector indices + embedding generation wired to `EmbeddingProvider`.
-- BM25 (Postgres FTS) retrieval.
-- Hybrid retrieval: BM25 + pgvector + cross-encoder rerank.
-- Citation engine: "no answer without provenance" at the API layer.
-- ADR (retrieval strategy).
-- `evaluations/retrieval-benchmarks.md` with accepted thresholds.
+- `Goal`, `Task`, `Roadmap` domain models with dependency edges and status.
+- Every execution item linked back to the source memory (citation chain from P4).
+- Status-change audit log (actor, before, after, reason).
+- `GET /goals/{id}/why` — returns source citations justifying the goal.
 
 ## Recently Completed
+- **2026-05-30** Phase 4 — Engineering Memory ✅
+  - `packages/retrieval/` — EmbeddingService, FTSService, VectorService, RRFReranker, HybridRetriever, CitationEngine, MemoryService.
+  - `chunk_embeddings` + `memory_entries` tables; migration `0003_retrieval` (pgvector HNSW + GIN FTS indices).
+  - POST /retrieval/embed/*, POST /retrieval/search, POST+GET /memory/entries, POST /memory/search.
+  - Citation enforcement: every result carries source_id + URI + title; `has_citations` explicit.
+  - Unit tests (RRF, 6 tests) + integration tests (embedding, retrieval, memory).
+  - ADR-006 ratified (RRF over neural reranker — AP-3 offline-first).
+  - `evaluations/retrieval-benchmarks.md` thresholds set.
+
 - **2026-05-30** Phase 3 — Knowledge Compression ✅
   - `packages/llm/` — LLMProvider + EmbeddingProvider Protocols; OllamaProvider (offline default, httpx only); OpenAI/Anthropic/OpenRouter adapters (optional, lazy-imported).
   - `create_llm_provider()` + `create_embedding_provider()` factory — provider switch = one env-var change.
@@ -46,9 +53,9 @@ Planned scope:
   - MkDocs Material renders the memory bank.
 
 ## Open Decisions
-- **Embedding model family and dimension**. Default is 768-dim (`nomic-embed-text` via Ollama), settable via `ECI_LLM_EMBEDDING_DIM`. Confirm before creating pgvector index in P4.
-- **Cross-encoder reranker choice**. To be settled by ADR in P4.
-- **Deployment target order** (Tauri desktop vs. K8s server first). Revisit before P4 UI.
+- **Embedding model family and dimension**. Settled at 768-dim (`nomic-embed-text` via Ollama). HNSW index created for this dimension. Changing dimension = drop + recreate index.
+- **Neural cross-encoder reranker**. Deferred (ADR-006). Revisit at P6 when lesson corpus is large enough to measure uplift.
+- **Deployment target order** (Tauri desktop vs. K8s server first). Revisit before P5 UI.
 
 ## Blockers
 None.
@@ -56,8 +63,9 @@ None.
 ## Risks Currently Top-of-Mind
 See [risk-register/risks.md](risk-register/risks.md). Highest current:
 - **R-001** Cloud LLM availability (mitigated by Ollama offline path).
-- **R-002** Offline-Ollama hardware (research spike planned for P3).
+- **R-002** Offline-Ollama hardware (research spike planned for P5).
 - **R-003** Local-filesystem blob store is single-host (S3 adapter in P8 per ADR-004).
+- **R-004** (new) Empty corpus at retrieval time — embedding step must be run before search works. Mitigated by clear API error surface and `has_citations=False` response.
 
 ## Next Phase
-**Phase 4 — Engineering Memory.** Per charter RULE 4, do not begin until approved.
+**Phase 5 — Execution Intelligence.** Per charter RULE 4, do not begin until approved.

@@ -1,32 +1,27 @@
 [project]
-name = "eci-api"
+name = "eci-retrieval"
 version = "0.1.0"
-description = "ECI FastAPI backend."
+description = "ECI Phase 4 — hybrid retrieval, citation engine, long-term memory."
 requires-python = ">=3.12,<3.13"
 dependencies = [
-    "fastapi>=0.115.0",
-    "uvicorn[standard]>=0.30.0",
     "pydantic>=2.7.0",
     "pydantic-settings>=2.4.0",
+    "sqlalchemy>=2.0.30",
     "eci-observability",
     "eci-storage",
-    "eci-ingest",
     "eci-llm",
     "eci-compression",
-    "eci-retrieval",
 ]
 
 [tool.uv.sources]
 eci-observability = { workspace = true }
 eci-storage = { workspace = true }
-eci-ingest = { workspace = true }
 eci-llm = { workspace = true }
 eci-compression = { workspace = true }
-eci-retrieval = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/eci_api"]
+packages = ["src/eci_retrieval"]

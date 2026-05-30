@@ -13,11 +13,15 @@ from eci_ingest import (
     NoteIngestService,
     get_blob_store,
 )
-from eci_llm import LLMProvider, create_llm_provider
+from eci_llm import EmbeddingProvider, LLMProvider, create_embedding_provider, create_llm_provider
+from eci_retrieval.embedding_service import EmbeddingService
+from eci_retrieval.hybrid_retriever import HybridRetriever
+from eci_retrieval.memory_service import MemoryService
 from eci_storage import sessionmaker_for
 
-# Process-level LLM provider singleton (created on first request).
+# Process-level provider singletons (created on first request).
 _llm_provider: LLMProvider | None = None
+_embedding_provider: EmbeddingProvider | None = None
 
 
 def get_db() -> Iterator[Session]:
@@ -42,6 +46,14 @@ def get_llm_provider() -> LLMProvider:
     return _llm_provider
 
 
+def get_embedding_provider() -> EmbeddingProvider:
+    """Return the process-level embedding provider. Created once on first call."""
+    global _embedding_provider
+    if _embedding_provider is None:
+        _embedding_provider = create_embedding_provider()
+    return _embedding_provider
+
+
 def get_document_service(
     session: Session = Depends(get_db),
 ) -> DocumentIngestService:
@@ -57,3 +69,24 @@ def get_compression_service(
     provider: LLMProvider = Depends(get_llm_provider),
 ) -> CompressionService:
     return CompressionService(session, provider)
+
+
+def get_embedding_service(
+    session: Session = Depends(get_db),
+    provider: EmbeddingProvider = Depends(get_embedding_provider),
+) -> EmbeddingService:
+    return EmbeddingService(session, provider)
+
+
+def get_hybrid_retriever(
+    session: Session = Depends(get_db),
+    provider: EmbeddingProvider = Depends(get_embedding_provider),
+) -> HybridRetriever:
+    return HybridRetriever(session, provider)
+
+
+def get_memory_service(
+    session: Session = Depends(get_db),
+    provider: EmbeddingProvider = Depends(get_embedding_provider),
+) -> MemoryService:
+    return MemoryService(session, provider)
