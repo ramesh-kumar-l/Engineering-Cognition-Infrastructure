@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: eci-postgres
+    environment:
+      POSTGRES_USER: eci
+      POSTGRES_PASSWORD: eci
+      POSTGRES_DB: eci
+    ports:
+      - "5432:5432"
+    volumes:
+      - eci_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eci"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  postgres-test:
+    image: pgvector/pgvector:pg16
+    container_name: eci-postgres-test
+    environment:
+      POSTGRES_USER: eci
+      POSTGRES_PASSWORD: eci
+      POSTGRES_DB: eci_test
+    ports:
+      - "5433:5432"
+    profiles: ["test"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eci"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  eci_pgdata:

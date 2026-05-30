@@ -4,34 +4,51 @@ Reverse-chronological log of completed work, milestones, and lessons. New entrie
 
 ---
 
+## 2026-05-30 — Phase 2 Knowledge Capture complete
+
+**Completed.**
+- **Storage (`packages/storage/`).** SQLAlchemy 2 models split one-per-aggregate (`raw_blobs`, `documents`, `notes`, `audit_events`). Alembic migration `0001_initial` creates the schema. Engine + session factory in `database.py`; transactional `session_scope()` for unit-of-work callers. Tests run against real Postgres via a transactional fixture (no DB mocks — global feedback honoured).
+- **Ingestion (`packages/ingest/`).** Content hashing isolated to `hashing.py`. `BlobStore` Protocol + `LocalBlobStore` shard by hash prefix; S3 adapter remains a one-file change per ADR-004. Parsers split per kind (`markdown.py`, `plaintext.py`, `pdf.py`) so individual reads stay tiny. Services split per aggregate (`document_service.py`, `note_service.py`) to keep each file <150 lines. Audit helper reused across services.
+- **API.** `POST /documents` (multipart) and `POST /notes` (JSON) endpoints; per-route Prometheus counters; ingest exceptions mapped to 413/415/422.
+- **Local infra.** `docker-compose.yml` runs `pgvector/pgvector:pg16` so the same image carries through to P3 embeddings. Separate `postgres-test` service under a `test` profile for CI parity.
+- **ADR-004** (storage layout) — Accepted.
+- **Evaluation contract** `evaluations/ingestion-correctness.md` — P2 thresholds: 100% round-trip / 100% idempotency / 100% provenance.
+
+**Milestone:** Phase 2 exit criteria met — see [implementation-status.md](implementation-status.md). Phase 3 (Knowledge Compression) unblocked.
+
+**Lessons learned.**
+- *Idempotency at the database boundary, not the service layer.* `UNIQUE(content_hash)` plus `INSERT ... ON CONFLICT` would be even tighter; today we do `SELECT then INSERT`, which is correct under the SERIALIZABLE-friendly defaults but should be revisited with a high-concurrency benchmark in P8.
+- *Per-aggregate services beat shared services.* `document_service.py` + `note_service.py` (≈150 lines each) read faster than a hypothetical `ingest_service.py` (≈300+) — both for humans and LLMs.
+- *Audit events captured early are cheap; bolted on later they hurt.* Auditing was added in the first version of each service rather than retrofitted — already paid off when verifying dedup behavior in tests.
+
+---
+
 ## 2026-05-30 — Phase 1 Foundation complete
 
 **Completed.**
-- Memory bank populated: `projectbrief.md`, `product-context.md`, `system-patterns.md`, `tech-context.md`, `active-context.md`, `progress.md`, `implementation-status.md`.
-- Memory bank subdirectories created: `architecture-decisions/`, `research/`, `evaluations/`, `roadmaps/`, `risk-register/`.
-- ADR-001 (charter ratification), ADR-002 (technology stack), ADR-003 (repo + branching) ratified.
-- Repo skeleton: `apps/`, `packages/`, `infra/`, `docs/`, `scripts/`.
-- Observability package (`packages/observability/`) wired with OpenTelemetry tracing, Prometheus metrics, structlog logging, and a Langfuse client stub. Console exporters as default; OTLP/Langfuse activated via env.
-- FastAPI stub (`apps/api/`) exposes `/healthz`, `/readyz`, and `/metrics`. One root span + one counter increment + one structured log per request.
-- `make smoke` produces a trace, a metric, and a log — proves end-to-end wiring without external infrastructure.
-- MkDocs Material site renders the memory bank (`mkdocs build --strict` clean).
-- GitHub Actions CI workflow committed: lint (`ruff`), type-check (`mypy`), test (`pytest`), docs build (`mkdocs build --strict`).
-- Initial risk register seeded with R-001 (cloud LLM availability) and R-002 (Ollama hardware).
+- Memory bank populated: 7 files including `implementation-status.md`.
+- ADRs ratified: ADR-001 (charter), ADR-002 (stack), ADR-003 (repo + branching).
+- Repo skeleton: `apps/`, `packages/`, `infra/`, `docs/`, `scripts/`, `.github/workflows/`.
+- **Observability** spine in `packages/observability/`: OpenTelemetry tracing (console + OTLP), Prometheus metrics (`eci_requests_total`, `eci_request_latency_seconds`, `eci_ingest_total`, `eci_ingest_bytes_total`), structlog with trace correlation, Langfuse client wrapper (no-op when unconfigured). One `bootstrap()` entry.
+- **API** stub: FastAPI app factory, lifespan-driven bootstrap, `/healthz`, `/readyz`, `/metrics`, `FastAPIInstrumentor` for auto-tracing.
+- **CI** workflow: lint (`ruff`), format check, type-check (`mypy --strict`), tests, strict docs build, smoke. A separate integration job runs against a Postgres service.
+- **Tooling**: `uv` workspace, `pyproject.toml`, `Makefile` (`install`, `lint`, `type`, `test`, `smoke`, `docs`, `ci-local`, `db-up`, `db-migrate`, `test-integration`).
+- **MkDocs Material** site renders the memory bank.
+- **Risk register** initialized: R-001 (cloud LLM availability), R-002 (Ollama hardware).
 
-**Milestone:** Phase 1 exit criteria met — see [implementation-status.md](implementation-status.md). Phase 2 (Knowledge Capture) unblocked.
+**Milestone:** Phase 1 exit criteria met. Phase 2 (Knowledge Capture) unblocked.
 
-**Lessons learned (carried into later phases).**
-- The 300-line file limit is enforced *as the package is being built*, not retroactively. Each observability subsystem became its own file from day one rather than waiting for `observability.py` to grow large.
-- Default-on observability with **console exporters** lets the smoke target prove wiring without a running collector. This pattern (`local: console exporter; prod: OTLP env-configured`) carries forward.
-- The memory bank is most useful when it is small and links to the source of truth (ADRs, roadmap) rather than duplicating it. Avoid rewriting charter content into multiple files.
+**Lessons learned.**
+- The 300-line file limit is enforced *while* a package is being built. Each observability subsystem became its own file from day one.
+- Console exporters as the default lets `make smoke` prove wiring without external infrastructure. Pattern: *local → console; prod → OTLP via env.*
+- Memory bank is most useful when small and link-heavy, not when it duplicates charter content.
 
 ---
 
 ## 2026-05-30 — Roadmap ratified
 
-- ECI charter (system prompt) accepted as-is.
-- Master roadmap (P1–P8) written to [roadmaps/master-roadmap.md](roadmaps/master-roadmap.md). Per-phase exit criteria, dependencies, and quality gates defined.
-- Decisions explicitly deferred: Postgres/pgvector versions, embedding model, reranker, SSO provider, deployment-target ordering, evaluation thresholds, LLM cost ceiling. Each lives in the phase that owns it.
+- ECI charter accepted as-is.
+- Master roadmap (P1–P8) written. Per-phase exit criteria, dependencies, and quality gates defined.
 
 ---
 

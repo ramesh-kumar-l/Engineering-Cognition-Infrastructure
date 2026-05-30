@@ -1,0 +1,51 @@
+site_name: Engineering Cognition Infrastructure
+site_description: A trustworthy, production-grade engineering memory.
+docs_dir: docs
+strict: true
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - content.code.copy
+    - search.highlight
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+nav:
+  - Home: index.md
+  - Memory Bank:
+    - Project Brief: bank/projectbrief.md
+    - Product Context: bank/product-context.md
+    - System Patterns: bank/system-patterns.md
+    - Tech Context: bank/tech-context.md
+    - Active Context: bank/active-context.md
+    - Progress: bank/progress.md
+    - Implementation Status: bank/implementation-status.md
+  - Roadmap:
+    - Master Roadmap: bank/roadmaps/master-roadmap.md
+  - Architecture Decisions:
+    - Index: bank/architecture-decisions/README.md
+    - ADR-001 Charter: bank/architecture-decisions/ADR-001-charter-ratification.md
+    - ADR-002 Stack: bank/architecture-decisions/ADR-002-technology-stack.md
+    - ADR-003 Repo: bank/architecture-decisions/ADR-003-repo-and-branching.md
+    - ADR-004 Storage: bank/architecture-decisions/ADR-004-storage-layout.md
+  - Risk Register: bank/risk-register/risks.md
+  - Evaluations: bank/evaluations/README.md
+  - Research: bank/research/README.md
+
+plugins:
+  - search
+
+# project-memory-bank/ is mounted into docs/bank/ via the bank.md shim;
+# see docs/index.md and the symlink/copy step in `make docs`.

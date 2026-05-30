@@ -1,0 +1,85 @@
+name: ci
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quick:
+    name: lint + type + unit + docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Sync workspace
+        run: uv sync --all-packages
+
+      - name: Ruff (lint)
+        run: uv run ruff check .
+
+      - name: Ruff (format check)
+        run: uv run ruff format --check .
+
+      - name: Mypy (strict)
+        run: uv run mypy apps/api packages/observability packages/storage packages/ingest
+
+      - name: Pytest (unit)
+        run: uv run pytest -m "not integration"
+
+      - name: MkDocs (strict build)
+        run: uv run mkdocs build --strict
+
+      - name: Smoke
+        run: uv run python scripts/smoke.py
+
+  integration:
+    name: integration (real Postgres)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: quick
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: eci
+          POSTGRES_PASSWORD: eci
+          POSTGRES_DB: eci_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      ECI_TEST_DB_URL: postgresql+psycopg://eci:eci@localhost:5432/eci_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync --all-packages
+      - name: Install pgvector
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-16-pgvector || true
+      - name: Alembic migrate
+        run: uv run alembic -c packages/storage/alembic.ini upgrade head
+      - name: Pytest (integration)
+        run: uv run pytest -m integration

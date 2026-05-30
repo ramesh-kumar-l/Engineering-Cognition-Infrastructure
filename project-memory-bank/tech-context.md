@@ -16,24 +16,34 @@ Concrete technology choices and current dependencies. See [ADR-002](architecture
 | Containers | Docker; Kubernetes for cloud server deployments |
 | CI | GitHub Actions |
 
-## Phase 1 Wired
+## Phase 1 + Phase 2 Wired
 - **Python 3.12** with `uv` workspace at the root.
-- **FastAPI** stub app at `apps/api/` exposing one health endpoint.
-- **Observability package** at `packages/observability/` with three subsystems:
+- **FastAPI** at `apps/api/` exposing `/healthz`, `/readyz`, `/metrics`, `POST /documents`, `POST /notes`.
+- **Observability package** at `packages/observability/`:
   - `tracing.py` — OpenTelemetry SDK; console exporter by default, OTLP via env.
-  - `metrics.py` — `prometheus_client` registry; `/metrics` endpoint.
+  - `metrics.py` — `prometheus_client` registry: `eci_requests_total`, `eci_request_latency_seconds`, `eci_ingest_total`, `eci_ingest_bytes_total`.
   - `logging.py` — `structlog` with trace correlation.
   - `langfuse_export.py` — Langfuse client wrapper; no-op when unconfigured.
+- **Storage package** at `packages/storage/`:
+  - SQLAlchemy 2 models split one-per-aggregate (`raw_blobs`, `documents`, `notes`, `audit_events`).
+  - Alembic migrations (`0001_initial`).
+  - `session_scope()` context manager for unit-of-work callers.
+- **Ingest package** at `packages/ingest/`:
+  - `hashing.py` (sha256 helpers).
+  - `BlobStore` Protocol + `LocalBlobStore` (filesystem, sharded).
+  - Parsers per kind: `markdown.py`, `plaintext.py`, `pdf.py`.
+  - Services per aggregate: `document_service.py`, `note_service.py`.
+  - Shared audit helper.
+- **Postgres** runs from `infra/docker/docker-compose.yml` using `pgvector/pgvector:pg16` (vector ext pre-installed for P3+).
 - **MkDocs Material** site serving the memory bank.
-- **GitHub Actions CI**: lint (`ruff`), type-check (`mypy`), test (`pytest`), docs build (`mkdocs build --strict`).
-- **`make smoke`** target proves observability wiring end-to-end (one trace, one metric, one log).
+- **GitHub Actions CI**: quick lane (lint + type + unit + docs + smoke) and integration lane (real Postgres + Alembic).
+- **`make smoke`** proves observability wiring end-to-end (one trace, one metric, one log).
 
 ## Not Yet Wired (deferred per phase)
 | Item | Phase |
 |---|---|
-| Postgres + pgvector | P2 |
-| Ingestion API + storage models | P2 |
 | LLM runtime abstraction | P3 |
+| Embeddings + pgvector indices | P3 |
 | Hybrid retrieval | P4 |
 | Frontend (React + Tauri) | P4 (initial), P5+ (full) |
 | Cross-encoder reranker | P4 |

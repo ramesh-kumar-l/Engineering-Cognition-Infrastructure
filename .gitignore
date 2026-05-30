@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.so
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# uv
+uv.lock
+
+# Editors
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Docs build
+site/
+
+# Local data
+data/
+*.sqlite
+*.db
+*.log
+
+# Node (for P4+ frontend / docs assets)
+node_modules/
+
+# Tauri (P4+)
+target/
+src-tauri/target/

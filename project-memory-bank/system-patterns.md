@@ -16,6 +16,7 @@ This file records architectural patterns, standards, and conventions that span t
 | [ADR-001](architecture-decisions/ADR-001-charter-ratification.md) | Charter ratification | Accepted |
 | [ADR-002](architecture-decisions/ADR-002-technology-stack.md) | Technology stack | Accepted |
 | [ADR-003](architecture-decisions/ADR-003-repo-and-branching.md) | Repository layout and branching | Accepted |
+| [ADR-004](architecture-decisions/ADR-004-storage-layout.md) | Storage layout for captured knowledge | Accepted |
 
 ## Cross-cutting Patterns
 
@@ -55,8 +56,18 @@ Every write path (ingest, status change, lesson supersession, role grant) append
 - **Commits:** conventional commits; PRs reference the ADR they implement or the phase exit criterion they satisfy.
 - **Docs:** every public function has a one-line docstring; complex invariants explained in module-level docstring.
 
+### Ingestion + provenance pattern (P2)
+Captured content has two lifetimes:
+- **Raw bytes** — immutable, content-addressed (sha256), stored in a `BlobStore` (filesystem locally; S3 adapter in P8).
+- **Parsed records** — `Document` (linked to a `RawBlob`) or `Note` (inline body, content-hashed with source + author + captured_at).
+
+Every ingest is idempotent at the database boundary via `UNIQUE(content_hash)`. Replays return the existing record and emit a `*.dedup` audit event.
+
+Every ingest records `source`, `captured_at`, `ingested_at`, `ingested_by`. The audit trail is append-only.
+
+Services are split per aggregate (`document_service.py` ≈ 150 lines, `note_service.py` ≈ 100 lines) rather than a shared `ingest_service.py`. Parsers are split per kind.
+
 ## Patterns Deferred to Later Phases
-- Ingestion + provenance pattern → Phase 2.
 - LLM-runtime abstraction → Phase 3.
 - Hybrid retrieval + citation pattern → Phase 4.
 - Execution + traceability pattern → Phase 5.
