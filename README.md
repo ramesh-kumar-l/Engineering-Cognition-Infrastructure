@@ -7,7 +7,8 @@ A trustworthy, production-grade engineering memory.
 ## Status
 - **Phase 1 — Foundation** ✅
 - **Phase 2 — Knowledge Capture** ✅
-- **Phase 3 — Knowledge Compression** ⬜ (next)
+- **Phase 3 — Knowledge Compression** ✅
+- **Phase 4 — Engineering Memory** ⬜ (next)
 
 See [`project-memory-bank/implementation-status.md`](project-memory-bank/implementation-status.md) for the full checklist, [`project-memory-bank/active-context.md`](project-memory-bank/active-context.md) for the current save state, and [`project-memory-bank/roadmaps/master-roadmap.md`](project-memory-bank/roadmaps/master-roadmap.md) for the eight phases.
 

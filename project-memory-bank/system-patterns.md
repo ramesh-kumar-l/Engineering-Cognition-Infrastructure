@@ -17,6 +17,7 @@ This file records architectural patterns, standards, and conventions that span t
 | [ADR-002](architecture-decisions/ADR-002-technology-stack.md) | Technology stack | Accepted |
 | [ADR-003](architecture-decisions/ADR-003-repo-and-branching.md) | Repository layout and branching | Accepted |
 | [ADR-004](architecture-decisions/ADR-004-storage-layout.md) | Storage layout for captured knowledge | Accepted |
+| [ADR-005](architecture-decisions/ADR-005-llm-runtime.md) | LLM runtime abstraction | Accepted |
 
 ## Cross-cutting Patterns
 
@@ -67,8 +68,28 @@ Every ingest records `source`, `captured_at`, `ingested_at`, `ingested_by`. The 
 
 Services are split per aggregate (`document_service.py` ≈ 150 lines, `note_service.py` ≈ 100 lines) rather than a shared `ingest_service.py`. Parsers are split per kind.
 
+### LLM runtime abstraction pattern (P3)
+`packages/llm/` exposes `LLMProvider` and `EmbeddingProvider` as `runtime_checkable` Protocols.
+Callers never import a concrete class — only the Protocol and the factory function
+`create_llm_provider(config)`. Switching providers is a one-env-var change (`ECI_LLM_PROVIDER`).
+
+- `OllamaProvider` — offline default; requires only `httpx`.
+- `OpenAIProvider`, `AnthropicProvider`, `OpenRouterProvider` — optional; raise
+  `LLMProviderNotAvailable` on instantiation if the required package is absent.
+
+`EmbeddingProvider` is defined but not wired to storage until Phase 4.
+
+### Compression pipeline pattern (P3)
+`CompressionService.compress(request)` orchestrates three independent stages in sequence:
+1. `SummarizationService` → 3 `Summary` DB records (short / medium / long).
+2. `MentalModelService` → 1 `MentalModel` DB record (claims, entities, relationships, playbook).
+3. `PlaybookService` → stored inside `MentalModel.playbook` JSONB field.
+
+Each stage emits an OTel span. Malformed JSON from the LLM degrades gracefully
+(empty fields) rather than raising, per AP-2 (partial evidence > no evidence).
+
 ## Patterns Deferred to Later Phases
-- LLM-runtime abstraction → Phase 3.
+- LLM-runtime abstraction → Phase 3 ✅ (done).
 - Hybrid retrieval + citation pattern → Phase 4.
 - Execution + traceability pattern → Phase 5.
 - Reflection + lesson register pattern → Phase 6.

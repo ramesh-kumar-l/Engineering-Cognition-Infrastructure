@@ -48,6 +48,7 @@ testpaths = ["apps", "packages"]
 addopts = "-ra -q --strict-markers"
 markers = [
     "integration: requires a running Postgres (set ECI_TEST_DB_URL)",
+    "llm_integration: requires a running Ollama instance (set ECI_LLM_OLLAMA_HOST)",
     "slow: slow test, skipped by default in CI quick lane",
 ]
 asyncio_mode = "auto"

@@ -60,6 +60,10 @@ def create_app() -> FastAPI:
     app.include_router(documents.router)
     app.include_router(notes.router)
 
+    from eci_api.routers import compression
+
+    app.include_router(compression.router)
+
     @app.get("/metrics", include_in_schema=False)
     def metrics() -> Response:
         return Response(generate_latest(REGISTRY), media_type=CONTENT_TYPE_LATEST)

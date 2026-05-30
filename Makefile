@@ -2,7 +2,7 @@
         db-up db-down db-migrate db-reset test-integration clean
 
 PY := uv run
-PYTHON_PKGS := apps/api packages/observability packages/storage packages/ingest
+PYTHON_PKGS := apps/api packages/observability packages/storage packages/ingest packages/llm packages/compression
 
 help:
 	@echo "Targets:"
@@ -62,6 +62,9 @@ db-reset:
 
 test-integration:
 	$(PY) pytest -m integration
+
+test-llm:
+	$(PY) pytest -m llm_integration
 
 clean:
 	rm -rf .pytest_cache .mypy_cache .ruff_cache site build dist

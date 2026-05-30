@@ -4,6 +4,26 @@ Reverse-chronological log of completed work, milestones, and lessons. New entrie
 
 ---
 
+## 2026-05-30 — Phase 3 Knowledge Compression complete
+
+**Completed.**
+- **LLM runtime (`packages/llm/`).** `LLMProvider` + `EmbeddingProvider` Protocols; `OllamaProvider` offline default (httpx only); `OpenAIProvider`, `AnthropicProvider`, `OpenRouterProvider` as optional extras (lazy-import guards). `create_llm_provider()` factory driven by `LLMConfig`. Switching providers = one env-var change.
+- **Compression pipeline (`packages/compression/`).** `SummarizationService` (3 levels: short/medium/long with level-specific prompts and token budgets), `MentalModelService` (JSON extraction with markdown-fence stripping and graceful fallback on parse failure), `PlaybookService` (procedural extraction stored in `MentalModel.playbook` JSONB), `TextChunker` (paragraph-aware, overlap-capable), `CompressionService` orchestrator.
+- **Storage.** `summaries` table (3 rows per source), `mental_models` table (1 row per source, includes playbook field). Alembic migration `0002_compression`. CHECK constraints ensure each row has exactly one of `document_id` / `note_id` set.
+- **API.** `POST /compress/documents/{id}`, `POST /compress/notes/{id}`, `GET /compress/documents/{id}/summaries`, `GET /compress/documents/{id}/mental-model`.
+- **Testing.** Unit tests for chunker, summarizer, mental-model service (stub LLM — no Ollama required). Integration tests for `CompressionService` against real Postgres with stub LLM.
+- **ADR-005** (LLM runtime abstraction) — Accepted.
+- **`evaluations/summarization-faithfulness.md`** — thresholds set (faithfulness ≥ 0.90 SHORT/MEDIUM, ≥ 0.85 LONG; latency p95 budgets). Baseline run deferred to first Ollama run.
+
+**Milestone:** Phase 3 exit criteria met. Phase 4 (Engineering Memory) unblocked.
+
+**Lessons learned.**
+- *Graceful JSON fallback is load-bearing.* LLMs often return markdown-fenced JSON or partial objects. Stripping fences and defaulting missing fields to `[]` means one bad LLM response never crashes the pipeline.
+- *Optional deps should fail loudly on instantiation, not at import time.* Lazy-import guards in `openai.py` / `anthropic.py` mean `import eci_llm` always succeeds; the error only surfaces if you try to *use* an unavailable provider.
+- *One LLM provider singleton per process is correct.* `httpx.Client` keeps a connection pool; creating one per request would be wasteful. The singleton in `dependencies.py` is overridable via `dependency_overrides` in tests.
+
+---
+
 ## 2026-05-30 — Phase 2 Knowledge Capture complete
 
 **Completed.**

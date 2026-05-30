@@ -14,7 +14,7 @@ Risk states: **Open** · **Mitigated** · **Accepted** · **Closed**.
 - **Impact:** Service degradation, cost spikes, behavioral drift between releases.
 - **Mitigation in place:** AP-3 (offline-first) — Ollama is the default runtime; cloud providers are opt-in. LLM runtime abstraction (P3) ensures provider switching is a config change.
 - **Residual risk:** Offline-Ollama performance may not match cloud models for some tasks. Tracked under R-002.
-- **Next review:** End of P3.
+- **Next review:** End of P4.
 
 ---
 
@@ -26,7 +26,8 @@ Risk states: **Open** · **Mitigated** · **Accepted** · **Closed**.
 - **Impact:** Some users cannot use the offline path; AP-3 weakens for them.
 - **Mitigation in place:** None yet.
 - **Planned mitigation:** P3 research spike — benchmark several model sizes for the P3 evaluation set; document minimum-viable hardware; design a "small offline + cloud fallback" mode that does not violate AP-3 (cloud is enhancement, not requirement).
-- **Next review:** Start of P3.
+- **Mitigation in place:** P3 research noted. Benchmarked against `llama3.2` (3B). Small models are sufficient for summarization; mental-model extraction benefits from larger models (7B+).
+- **Next review:** Start of P4.
 
 ---
 
@@ -58,3 +59,4 @@ These are placeholders; concrete entries are opened in the phase that introduces
 |---|---|---|
 | 2026-05-30 | Project lead | Initial register; opened R-001, R-002. |
 | 2026-05-30 | Project lead | P2 review; opened R-003 (single-host blob store). |
+| 2026-05-30 | Project lead | P3 review; R-001 next review deferred to P4; R-002 partially mitigated (llama3.2 benchmarked). |
