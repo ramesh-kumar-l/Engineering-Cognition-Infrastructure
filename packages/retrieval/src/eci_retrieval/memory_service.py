@@ -50,12 +50,15 @@ class MemoryService:
         self,
         source_id: uuid.UUID | None = None,
         current_only: bool = True,
+        tenant_id: uuid.UUID | None = None,
     ) -> list[MemoryEntryOut]:
         q = self._session.query(MemoryEntry)
         if current_only:
             q = q.filter(MemoryEntry.is_current.is_(True))
         if source_id is not None:
             q = q.filter(MemoryEntry.source_id == source_id)
+        if tenant_id is not None:
+            q = q.filter(MemoryEntry.tenant_id == tenant_id)
         return [self._to_dto(e) for e in q.order_by(MemoryEntry.created_at.desc()).all()]
 
     def search_entries(self, query: str, top_k: int = 10) -> list[MemoryEntryOut]:

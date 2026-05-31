@@ -16,12 +16,18 @@ class FTSService:
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def search(self, query: str, top_k: int = 10) -> list[ChunkHit]:
+    def search(
+        self,
+        query: str,
+        top_k: int = 10,
+        tenant_id: uuid.UUID | None = None,
+    ) -> list[ChunkHit]:
         """Return up to *top_k* chunks matching *query* by full-text rank."""
         if not query.strip():
             return []
 
-        stmt = text("""
+        tenant_clause = "AND tenant_id = :tenant_id" if tenant_id is not None else ""
+        stmt = text(f"""
             SELECT
                 document_id,
                 note_id,
@@ -33,11 +39,15 @@ class FTSService:
                 ) AS score
             FROM chunk_embeddings
             WHERE to_tsvector('english', content) @@ websearch_to_tsquery('english', :query)
+            {tenant_clause}
             ORDER BY score DESC
             LIMIT :top_k
         """)
 
-        rows = self._session.execute(stmt, {"query": query, "top_k": top_k}).fetchall()
+        params: dict[str, object] = {"query": query, "top_k": top_k}
+        if tenant_id is not None:
+            params["tenant_id"] = str(tenant_id)
+        rows = self._session.execute(stmt, params).fetchall()
         return [
             ChunkHit(
                 source_type="document" if row.document_id is not None else "note",

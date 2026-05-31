@@ -42,6 +42,9 @@ class RoadmapService:
             raise RoadmapNotFoundError(f"Roadmap {roadmap_id} not found")
         return _to_out(roadmap)
 
-    def list_roadmaps(self) -> list[RoadmapOut]:
-        rows = self._session.scalars(select(Roadmap).order_by(Roadmap.created_at))
+    def list_roadmaps(self, tenant_id: uuid.UUID | None = None) -> list[RoadmapOut]:
+        stmt = select(Roadmap).order_by(Roadmap.created_at)
+        if tenant_id is not None:
+            stmt = stmt.where(Roadmap.tenant_id == tenant_id)
+        rows = self._session.scalars(stmt)
         return [_to_out(r) for r in rows]

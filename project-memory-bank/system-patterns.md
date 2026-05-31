@@ -21,6 +21,7 @@ This file records architectural patterns, standards, and conventions that span t
 | ADR-006 | Retrieval strategy (RRF over neural reranker) | Accepted |
 | [ADR-007](architecture-decisions/ADR-007-execution-model.md) | Execution intelligence model | Accepted |
 | [ADR-008](architecture-decisions/ADR-008-reflection-model.md) | Reflection engine domain model | Accepted |
+| [ADR-009](architecture-decisions/ADR-009-enterprise-rbac.md) | Enterprise RBAC, multi-tenancy, OIDC SSO | Accepted |
 
 ## Cross-cutting Patterns
 
@@ -115,10 +116,18 @@ Each stage emits an OTel span. Malformed JSON from the LLM degrades gracefully
 - **LLM malformation is tolerated**: if the LLM returns malformed JSON or an empty array, the retrospective completes with 0 lessons — the caller can always create lessons manually via `POST /lessons`.
 - **Reflection runs are themselves citable**: every `Lesson` carries `retrospective_id`; clients can trace a lesson back to the run that generated it and thence to the execution history.
 
+### RBAC + tenancy pattern (P7)
+`packages/identity/` exposes TenantService, UserService, TokenService, OIDCService (ADR-009):
+- **Isolation boundary**: `tenant_id UUID` column (nullable) on all data tables. Service `list_*` methods accept `tenant_id: UUID | None`; when provided, only that tenant's records are returned.
+- **Authentication**: `GET /auth/login` → OIDC authorization URL; `POST /auth/callback` exchanges code for a local HS256 JWT. Dev bypass: `ECI_IDENTITY_AUTH_DISABLED=true` injects a fixed dev context (offline-first, AP-3).
+- **RBAC roles**: `admin > member > viewer`. Enforced at API boundary via `require_write` / `require_admin` FastAPI dependencies. Deny events increment `eci_auth_denied_total{reason}` counter and emit structured log lines.
+- **Retrieval per-source filtering**: `RetrievalRequest.tenant_id` is threaded into FTSService and VectorService SQL queries (`AND tenant_id = :tenant_id`) when set. Citations returned only from the caller's tenant corpus.
+- **Audit actor**: `RequestContext.actor` (email from JWT) is available for wiring into AuditEvent in P8.
+
 ## Patterns Deferred to Later Phases
 - LLM-runtime abstraction → Phase 3 ✅ (done).
 - Hybrid retrieval + citation pattern → Phase 4 ✅ (done).
 - Execution + traceability pattern → Phase 5 ✅ (done).
 - Reflection + lesson register pattern → Phase 6 ✅ (done).
-- RBAC + tenancy pattern → Phase 7.
+- RBAC + tenancy pattern → Phase 7 ✅ (done).
 - Release pattern (eval-gated, SLO-monitored) → Phase 8.

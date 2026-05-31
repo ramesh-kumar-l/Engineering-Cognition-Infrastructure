@@ -37,8 +37,12 @@ class HybridRetriever:
         """Run hybrid retrieval and return a citable RetrievalResult."""
         _log.info("retrieval.start", query=request.query[:120], top_k=request.top_k)
 
-        fts_hits = self._fts.search(request.query, top_k=self._config.rerank_top_k)
-        vector_hits = self._vector.search(request.query, top_k=self._config.rerank_top_k)
+        fts_hits = self._fts.search(
+            request.query, top_k=self._config.rerank_top_k, tenant_id=request.tenant_id
+        )
+        vector_hits = self._vector.search(
+            request.query, top_k=self._config.rerank_top_k, tenant_id=request.tenant_id
+        )
 
         reranked = self._reranker.rerank(fts_hits, vector_hits, top_k=request.top_k)
 

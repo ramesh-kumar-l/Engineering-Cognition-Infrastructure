@@ -18,7 +18,12 @@ class VectorService:
         self._session = session
         self._embedding_service = embedding_service
 
-    def search(self, query: str, top_k: int = 10) -> list[ChunkHit]:
+    def search(
+        self,
+        query: str,
+        top_k: int = 10,
+        tenant_id: uuid.UUID | None = None,
+    ) -> list[ChunkHit]:
         """Embed *query* and return up to *top_k* most similar chunks."""
         if not query.strip():
             return []
@@ -26,7 +31,8 @@ class VectorService:
         query_vec = self._embedding_service.embed_text(query)
         vec_str = "[" + ",".join(str(v) for v in query_vec) + "]"
 
-        stmt = text("""
+        tenant_clause = "WHERE tenant_id = :tenant_id" if tenant_id is not None else ""
+        stmt = text(f"""
             SELECT
                 document_id,
                 note_id,
@@ -34,11 +40,15 @@ class VectorService:
                 content,
                 1 - (embedding <=> cast(:vec AS vector)) AS score
             FROM chunk_embeddings
+            {tenant_clause}
             ORDER BY embedding <=> cast(:vec AS vector)
             LIMIT :top_k
         """)
 
-        rows = self._session.execute(stmt, {"vec": vec_str, "top_k": top_k}).fetchall()
+        params: dict[str, object] = {"vec": vec_str, "top_k": top_k}
+        if tenant_id is not None:
+            params["tenant_id"] = str(tenant_id)
+        rows = self._session.execute(stmt, params).fetchall()
         return [
             ChunkHit(
                 source_type="document" if row.document_id is not None else "note",

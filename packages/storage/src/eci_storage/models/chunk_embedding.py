@@ -49,6 +49,9 @@ class ChunkEmbedding(Base, TimestampMixin):
     embedding: Mapped[Any] = mapped_column(_VECTOR_TYPE, nullable=False)
     model_used: Mapped[str] = mapped_column(String(128), nullable=False, default="")
     dimensions: Mapped[int] = mapped_column(Integer, nullable=False, default=768)
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), nullable=True, index=True
+    )
 
     def __repr__(self) -> str:
         return f"<ChunkEmbedding {self.id} chunk_index={self.chunk_index}>"

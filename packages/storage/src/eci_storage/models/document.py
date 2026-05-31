@@ -40,6 +40,9 @@ class Document(Base, TimestampMixin):
         DateTime(timezone=True), default=utcnow, nullable=False
     )
     ingested_by: Mapped[str] = mapped_column(String(128), default="system", nullable=False)
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), nullable=True, index=True
+    )
 
     raw_blob: Mapped[RawBlob] = relationship(RawBlob, lazy="joined")
 

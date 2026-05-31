@@ -36,6 +36,9 @@ class Task(Base, TimestampMixin):
         ForeignKey("memory_entries.id", ondelete="SET NULL"),
         nullable=True,
     )
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), nullable=True, index=True
+    )
 
     def __repr__(self) -> str:
         return f"<Task {self.id} status={self.status!r}>"

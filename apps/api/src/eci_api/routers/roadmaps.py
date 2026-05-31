@@ -13,10 +13,12 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
+from eci_api.auth import get_request_context
 from eci_api.dependencies import get_roadmap_service
 from eci_execution.dto import RoadmapInput
 from eci_execution.errors import RoadmapNotFoundError
 from eci_execution.roadmap_service import RoadmapService
+from eci_identity.dto import RequestContext
 
 router = APIRouter(prefix="/roadmaps", tags=["roadmaps"])
 
@@ -42,8 +44,14 @@ def create_roadmap(
 
 
 @router.get("", response_model=list[RoadmapResponse])
-def list_roadmaps(svc: RoadmapService = Depends(get_roadmap_service)) -> list[RoadmapResponse]:
-    return [RoadmapResponse(id=r.id, title=r.title, description=r.description) for r in svc.list_roadmaps()]
+def list_roadmaps(
+    svc: RoadmapService = Depends(get_roadmap_service),
+    ctx: RequestContext = Depends(get_request_context),
+) -> list[RoadmapResponse]:
+    return [
+        RoadmapResponse(id=r.id, title=r.title, description=r.description)
+        for r in svc.list_roadmaps(tenant_id=ctx.tenant_id)
+    ]
 
 
 @router.get("/{roadmap_id}", response_model=RoadmapResponse)

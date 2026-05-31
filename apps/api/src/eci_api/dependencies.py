@@ -11,6 +11,8 @@ from eci_compression.compression_service import CompressionService
 from eci_execution.goal_service import GoalService
 from eci_execution.roadmap_service import RoadmapService
 from eci_execution.task_service import TaskService
+from eci_identity.tenant_service import TenantService
+from eci_identity.user_service import UserService
 from eci_reflection.lesson_service import LessonService
 from eci_reflection.retrospective_service import RetrospectiveService
 from eci_ingest import (
@@ -118,3 +120,11 @@ def get_retrospective_service(
     provider: LLMProvider = Depends(get_llm_provider),
 ) -> RetrospectiveService:
     return RetrospectiveService(session, provider)
+
+
+def get_tenant_service(session: Session = Depends(get_db)) -> TenantService:
+    return TenantService(session)
+
+
+def get_user_service(session: Session = Depends(get_db)) -> UserService:
+    return UserService(session)

@@ -13,7 +13,9 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
+from eci_api.auth import get_request_context
 from eci_api.dependencies import get_embedding_service, get_hybrid_retriever
+from eci_identity.dto import RequestContext
 from eci_retrieval.dto import Citation, RetrievalRequest
 from eci_retrieval.embedding_service import EmbeddingService
 from eci_retrieval.errors import EmbeddingError, SourceNotFoundError
@@ -101,11 +103,13 @@ def embed_note(
 def search(
     body: SearchRequest,
     retriever: HybridRetriever = Depends(get_hybrid_retriever),
+    ctx: RequestContext = Depends(get_request_context),
 ) -> SearchResponse:
     req = RetrievalRequest(
         query=body.query,
         top_k=body.top_k,
         source_types=body.source_types,
+        tenant_id=ctx.tenant_id,
     )
     result = retriever.retrieve(req)
     return SearchResponse(

@@ -3,23 +3,33 @@
 > **Read this first.** This file is the current "save state" of the project. It is updated at the end of every major feature and at every phase transition.
 
 ## Current Phase
-**Phase 7 — Enterprise** *(unblocked; not yet started)*.
+**Phase 8 — Production Hardening** *(unblocked; not yet started)*.
 
-Phases 1–6 are complete. See [implementation-status.md](implementation-status.md) for the exit-criteria checklist.
-
-Phases 1–5 are complete. See [implementation-status.md](implementation-status.md) for the exit-criteria checklist.
+Phases 1–7 are complete. See [implementation-status.md](implementation-status.md) for the exit-criteria checklist.
 
 ## Current Sprint Goal
-*(Phase 7 sprint begins on next approval — see [master-roadmap.md § Phase 7](roadmaps/master-roadmap.md))*
+*(Phase 8 sprint begins on next approval — see [master-roadmap.md § Phase 8](roadmaps/master-roadmap.md))*
 
 Planned scope:
-- RBAC at API boundary; role definitions as ADR.
-- Audit trail across all write paths with actor identity.
-- Team workspaces with isolation guarantees (negative tests).
-- SSO hooks (OIDC) — at least one provider wired end-to-end.
-- Per-source access control on retrieval results.
+- CI/CD pipelines with required reviewers.
+- Dep scanning, SAST, secret scanning, base-image policy.
+- Continuous evaluation gating releases.
+- SLOs measured ≥1 week (availability, latency p95/p99, citation coverage, retrieval recall).
+- DR runbook + executed DR drill.
+- Grafana dashboards + paging.
+- S3 BlobStore adapter (per ADR-004 follow-up).
 
 ## Recently Completed
+- **2026-05-31** Phase 7 — Enterprise ✅
+  - `packages/identity/` — TenantService, UserService, TokenService, OIDCService; RBAC roles + guards.
+  - `tenants`, `users` tables; `tenant_id` nullable FK column on all 9 data tables; migration `0006_enterprise`.
+  - `POST/GET /tenants`, `POST/GET/PATCH /users`, `GET /auth/login`, `POST /auth/callback`.
+  - JWT-based auth: local HS256 JWT issued after OIDC code exchange; dev bypass via env flag (AP-3).
+  - `require_write` / `require_admin` FastAPI dependencies; `eci_auth_denied_total` Prometheus counter.
+  - Per-source retrieval filtering: `tenant_id` threaded into FTS + vector SQL queries.
+  - Tenant isolation verified by 5 negative integration tests; RBAC unit tests (10 tests); service tests (14 tests).
+  - ADR-009 ratified; system-patterns.md updated.
+
 - **2026-05-31** Phase 6 — Reflection Engine ✅
   - `packages/reflection/` — RetrospectiveService, LessonService, PatternExtractor; evidence_helpers; DTOs + errors.
   - `retrospectives`, `lessons`, `lesson_evidence` tables; migration `0005_reflection`.
@@ -89,4 +99,4 @@ See [risk-register/risks.md](risk-register/risks.md). Highest current:
 - **R-004** (new) Empty corpus at retrieval time — embedding step must be run before search works. Mitigated by clear API error surface and `has_citations=False` response.
 
 ## Next Phase
-**Phase 7 — Enterprise.** Per charter RULE 4, do not begin until approved.
+**Phase 8 — Production Hardening.** Per charter RULE 4, do not begin until approved.

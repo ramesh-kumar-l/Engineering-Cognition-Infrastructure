@@ -20,6 +20,8 @@ from eci_storage.models.roadmap import Roadmap
 from eci_storage.models.summary import Summary
 from eci_storage.models.task import Task
 from eci_storage.models.task_dependency import TaskDependency
+from eci_storage.models.tenant import Tenant
+from eci_storage.models.user import User
 
 __all__ = [
     "AuditEvent",
@@ -39,4 +41,6 @@ __all__ = [
     "Summary",
     "Task",
     "TaskDependency",
+    "Tenant",
+    "User",
 ]

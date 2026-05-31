@@ -16,6 +16,7 @@ dependencies = [
     "eci-retrieval",
     "eci-execution",
     "eci-reflection",
+    "eci-identity",
 ]
 
 [tool.uv.sources]
@@ -27,6 +28,7 @@ eci-compression = { workspace = true }
 eci-retrieval = { workspace = true }
 eci-execution = { workspace = true }
 eci-reflection = { workspace = true }
+eci-identity = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

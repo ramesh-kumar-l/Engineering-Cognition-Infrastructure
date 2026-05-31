@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Any
 
 from sqlalchemy import DateTime, String, Text
-from sqlalchemy.dialects.postgresql import ARRAY, JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from eci_storage.models.base import Base, TimestampMixin, utcnow, uuid_pk
@@ -33,6 +33,9 @@ class Note(Base, TimestampMixin):
     ingested_by: Mapped[str] = mapped_column(String(128), default="system", nullable=False)
     content_hash: Mapped[str] = mapped_column(
         String(64), unique=True, index=True, nullable=False
+    )
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), nullable=True, index=True
     )
 
     def __repr__(self) -> str:

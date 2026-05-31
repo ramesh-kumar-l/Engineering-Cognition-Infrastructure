@@ -59,10 +59,16 @@ class GoalService:
             raise GoalNotFoundError(f"Goal {goal_id} not found")
         return _to_goal_out(goal)
 
-    def list_goals(self, roadmap_id: uuid.UUID | None = None) -> list[GoalOut]:
+    def list_goals(
+        self,
+        roadmap_id: uuid.UUID | None = None,
+        tenant_id: uuid.UUID | None = None,
+    ) -> list[GoalOut]:
         stmt = select(Goal).order_by(Goal.created_at)
         if roadmap_id is not None:
             stmt = stmt.where(Goal.roadmap_id == roadmap_id)
+        if tenant_id is not None:
+            stmt = stmt.where(Goal.tenant_id == tenant_id)
         return [_to_goal_out(g) for g in self._session.scalars(stmt)]
 
     def update_status(self, goal_id: uuid.UUID, update: StatusUpdate) -> GoalOut:

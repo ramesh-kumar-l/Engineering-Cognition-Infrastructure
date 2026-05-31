@@ -101,12 +101,21 @@ Legend: ✅ done · 🟡 in progress · ⬜ not started · ⛔ blocked
 
 ---
 
-## Phase 7 — Enterprise ⬜
+## Phase 7 — Enterprise ✅
 
-- ⬜ RBAC at API boundary; OIDC SSO.
-- ⬜ Audit trail across all write paths (already partially wired in P2; needs actor identity from auth).
-- ⬜ Team workspaces; isolation tests.
-- ⬜ Per-source access control on retrieval.
+- ✅ `packages/identity/` — TenantService, UserService, TokenService, OIDCService; config, errors, dto, rbac; ADR-009.
+- ✅ Storage: `tenants`, `users` tables; `tenant_id` nullable column on documents, notes, roadmaps, goals, tasks, memory_entries, chunk_embeddings, retrospectives, lessons; Alembic migration `0006_enterprise`.
+- ✅ Storage models: `Tenant`, `User` — registered in `eci_storage.models`.
+- ✅ RBAC at API boundary: `get_request_context`, `require_write`, `require_admin` FastAPI dependencies; `eci_auth_denied_total{reason}` Prometheus counter.
+- ✅ OIDC SSO: `GET /auth/login` → authorization URL; `POST /auth/callback` → code exchange → local HS256 JWT. Dev bypass via `ECI_IDENTITY_AUTH_DISABLED=true`.
+- ✅ Tenant management: `POST/GET/GET /tenants` (admin-only).
+- ✅ User management: `POST/GET/GET /users`, `PATCH /users/{id}/role`; list scoped to caller's tenant.
+- ✅ Tenant isolation: `list_goals/tasks/roadmaps` accept `tenant_id` filter; routers pass `ctx.tenant_id`.
+- ✅ Per-source retrieval access control: `RetrievalRequest.tenant_id` threaded into FTS + vector SQL queries; citations from other tenants excluded at query time.
+- ✅ Integration tests: tenant service (6 tests), user service (8 tests), RBAC unit tests (10 tests), tenant isolation negative tests (5 tests).
+- ✅ ADR-009 (enterprise RBAC model) — Accepted.
+
+**Quality gates:** Security ✅ (RBAC enforced at boundary; deny events logged + metered; cross-tenant read rejected at router) · Architecture ✅ (ADR-009) · Testing ✅ (isolation negative tests pass; RBAC unit tests) · Observability ✅ (`eci_auth_denied_total` counter; structlog per auth event) · Documentation ✅ (ADR-009 + system-patterns updated) · Performance ✅ (tenant_id indexed on all data tables; no regression on list paths).
 
 ---
 

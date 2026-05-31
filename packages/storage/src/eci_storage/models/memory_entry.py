@@ -44,6 +44,9 @@ class MemoryEntry(Base, TimestampMixin):
 
     embedding: Mapped[Any | None] = mapped_column(_VECTOR_TYPE, nullable=True)
     model_used: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), nullable=True, index=True
+    )
 
     def __repr__(self) -> str:
         return f"<MemoryEntry {self.id} title={self.title!r} v{self.version}>"

@@ -12,6 +12,7 @@ class RetrievalRequest:
     query: str
     top_k: int = 10
     source_types: list[str] = field(default_factory=lambda: ["document", "note"])
+    tenant_id: uuid.UUID | None = None
 
 
 @dataclass

@@ -15,10 +15,12 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
+from eci_api.auth import get_request_context
 from eci_api.dependencies import get_goal_service
 from eci_execution.dto import CitationInput, CitationOut, GoalInput, GoalOut, StatusUpdate
 from eci_execution.errors import GoalNotFoundError, InvalidStatusError
 from eci_execution.goal_service import GoalService
+from eci_identity.dto import RequestContext
 
 router = APIRouter(prefix="/goals", tags=["goals"])
 
@@ -123,8 +125,9 @@ def create_goal(
 def list_goals(
     roadmap_id: uuid.UUID | None = Query(default=None),
     svc: GoalService = Depends(get_goal_service),
+    ctx: RequestContext = Depends(get_request_context),
 ) -> list[GoalResponse]:
-    return [_to_goal_resp(g) for g in svc.list_goals(roadmap_id=roadmap_id)]
+    return [_to_goal_resp(g) for g in svc.list_goals(roadmap_id=roadmap_id, tenant_id=ctx.tenant_id)]
 
 
 @router.get("/{goal_id}", response_model=GoalResponse)

@@ -81,10 +81,16 @@ class TaskService:
             raise TaskNotFoundError(f"Task {task_id} not found")
         return _to_task_out(task)
 
-    def list_tasks(self, goal_id: uuid.UUID | None = None) -> list[TaskOut]:
+    def list_tasks(
+        self,
+        goal_id: uuid.UUID | None = None,
+        tenant_id: uuid.UUID | None = None,
+    ) -> list[TaskOut]:
         stmt = select(Task).order_by(Task.position, Task.created_at)
         if goal_id is not None:
             stmt = stmt.where(Task.goal_id == goal_id)
+        if tenant_id is not None:
+            stmt = stmt.where(Task.tenant_id == tenant_id)
         return [_to_task_out(t) for t in self._session.scalars(stmt)]
 
     def update_status(self, task_id: uuid.UUID, update: StatusUpdate) -> TaskOut:
