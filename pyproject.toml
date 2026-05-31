@@ -16,6 +16,8 @@ dev = [
     "httpx>=0.27.0",
     "mkdocs-material>=9.5.0",
     "types-requests",
+    "pip-audit>=2.7.0",
+    "bandit[toml]>=1.8.0",
 ]
 
 [tool.ruff]

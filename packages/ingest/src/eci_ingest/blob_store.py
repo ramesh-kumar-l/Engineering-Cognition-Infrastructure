@@ -63,10 +63,30 @@ _STORE: BlobStore | None = None
 
 
 def get_blob_store(config: IngestConfig | None = None) -> BlobStore:
-    """Return the process-wide BlobStore singleton."""
+    """Return the process-wide BlobStore singleton.
+
+    Backend is selected by ``ECI_BLOB_BACKEND`` (``local`` or ``s3``).
+    S3 requires ``boto3`` and the ``ECI_BLOB_S3_BUCKET`` env var.
+    """
     global _STORE
     if _STORE is not None:
         return _STORE
     cfg = config or load_ingest_config()
-    _STORE = LocalBlobStore(cfg.blob_root)
+    if cfg.blob_backend == "s3":
+        from eci_ingest.s3_blob_store import S3BlobStore
+
+        _STORE = S3BlobStore(
+            bucket=cfg.blob_s3_bucket,
+            prefix=cfg.blob_s3_prefix,
+            region=cfg.blob_s3_region,
+            endpoint_url=cfg.blob_s3_endpoint_url or None,
+        )
+    else:
+        _STORE = LocalBlobStore(cfg.blob_root)
     return _STORE
+
+
+def reset_blob_store() -> None:
+    """Reset the singleton — for testing only."""
+    global _STORE
+    _STORE = None

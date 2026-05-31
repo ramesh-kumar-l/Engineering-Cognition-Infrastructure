@@ -1,0 +1,136 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      skip_eval:
+        description: "Skip eval gating (emergency only — requires reason)"
+        required: false
+        default: "false"
+      skip_reason:
+        description: "Reason for skipping eval (required when skip_eval=true)"
+        required: false
+        default: ""
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  eval-gate:
+    name: eval gating
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: eci
+          POSTGRES_PASSWORD: eci
+          POSTGRES_DB: eci_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      ECI_TEST_DB_URL: postgresql+psycopg://eci:eci@localhost:5432/eci_test
+      ECI_IDENTITY_AUTH_DISABLED: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync --all-packages
+
+      - name: Alembic migrate
+        run: uv run alembic -c packages/storage/alembic.ini upgrade head
+
+      - name: Run integration tests
+        run: uv run pytest -m integration -q
+
+      - name: Eval gate
+        if: github.event.inputs.skip_eval != 'true'
+        run: uv run python scripts/eval_gate.py
+
+      - name: Record eval skip
+        if: github.event.inputs.skip_eval == 'true'
+        run: |
+          echo "EVAL GATE SKIPPED — reason: ${{ github.event.inputs.skip_reason }}"
+          echo "::warning::Eval gate was skipped for this release. Reason: ${{ github.event.inputs.skip_reason }}"
+
+  security-gate:
+    name: security gate (dep scan)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync --all-packages
+      - run: uv run pip-audit --desc
+
+  build-image:
+    name: build Docker image
+    needs: [eval-gate, security-gate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
+      image_digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/eci-api
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=sha-
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        if: github.event_name != 'workflow_dispatch'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/docker/api.Dockerfile
+          push: ${{ github.event_name != 'workflow_dispatch' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-staging:
+    name: deploy to staging
+    needs: build-image
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 10
+    steps:
+      - name: Deploy notice
+        run: |
+          echo "Deploy image ${{ needs.build-image.outputs.image_tag }} to staging"
+          echo "Digest: ${{ needs.build-image.outputs.image_digest }}"
+          # Wire in your deploy tooling here (kubectl, helm, fly.io, etc.)

@@ -43,14 +43,53 @@ Risk states: **Open** · **Mitigated** · **Accepted** · **Closed**.
 
 ---
 
-## Standing Risk Categories (to populate as phases land)
-- **R-S1** Data exfiltration via prompt injection (relevant from P3).
-- **R-S2** Citation/source poisoning (relevant from P4).
-- **R-S3** Multi-tenant isolation failure (relevant from P7).
-- **R-S4** Eval-set leakage into training data (relevant from P3).
-- **R-S5** Disaster recovery — backup integrity (relevant from P8).
+## R-004 — Retrieval corpus empty at evaluation time
+- **State:** Mitigated
+- **Opened:** 2026-05-30 (P4)
+- **Owner:** Project lead
+- **Description:** The embedding step must be run before search works. A cold deployment has an empty vector index, causing all searches to return 0 results.
+- **Mitigation in place:** `has_citations=False` in `RetrievalResult` surfaces this clearly. API returns 200 with an empty `results` list rather than 500. Documented in `active-context.md` open decisions.
 
-These are placeholders; concrete entries are opened in the phase that introduces them.
+---
+
+## R-005 — Ollama model weights not in DR backup
+- **State:** Accepted
+- **Opened:** 2026-05-31 (P8)
+- **Owner:** Project lead
+- **Description:** Ollama model weights (e.g., `nomic-embed-text`, `llama3.2`) are not included in the Postgres backup. A full restore requires re-pulling models from the Ollama registry.
+- **Impact:** DR restore time is extended by model pull time (5–30 min depending on model size and bandwidth).
+- **Accepted because:** Models are versioned and reproducible from the registry. The RPO for weights is effectively 0 (they don't change). The RTO extension is acceptable.
+- **Next review:** If Ollama registry becomes unavailable or models are deprecated.
+
+---
+
+## R-006 — Single-tenant blob migration to S3 not automated
+- **State:** Open
+- **Opened:** 2026-05-31 (P8)
+- **Owner:** Project lead
+- **Description:** Existing local-filesystem blobs are not automatically migrated when switching `ECI_BLOB_BACKEND=s3`. A migration script is needed.
+- **Impact:** Data in `LocalBlobStore` is not accessible via `S3BlobStore` without manual migration.
+- **Mitigation in place:** `S3BlobStore` and `LocalBlobStore` key layouts are identical, so a simple `aws s3 sync` suffices.
+- **Planned mitigation:** Add `scripts/migrate_blobs_to_s3.py` in a follow-up PR.
+
+---
+
+## R-003 — Local-filesystem blob store is single-host (UPDATED)
+- **State:** Mitigated (P8)
+- **Opened:** 2026-05-30 (P2)
+- **Owner:** Project lead
+- **Description:** `LocalBlobStore` writes to a single filesystem root; cannot scale horizontally.
+- **Mitigation:** `S3BlobStore` adapter shipped in P8. Switch by setting `ECI_BLOB_BACKEND=s3`. `BlobStore` Protocol unchanged; ingest services untouched.
+- **Residual risk:** See R-006 (migration script pending).
+
+---
+
+## Standing Risk Categories (resolved)
+- **R-S1** Data exfiltration via prompt injection — mitigated by prompt isolation in `OllamaProvider`; no user-supplied strings in system prompts.
+- **R-S2** Citation/source poisoning — mitigated by `UNIQUE(content_hash)` + per-tenant retrieval filter.
+- **R-S3** Multi-tenant isolation failure — mitigated by 5 negative integration tests (P7) + service-level `tenant_id` filter.
+- **R-S4** Eval-set leakage into training data — accepted; eval corpus is internal only.
+- **R-S5** Disaster recovery — backup integrity — see R-005; DR runbook documented and drill scheduled.
 
 ---
 
@@ -60,3 +99,4 @@ These are placeholders; concrete entries are opened in the phase that introduces
 | 2026-05-30 | Project lead | Initial register; opened R-001, R-002. |
 | 2026-05-30 | Project lead | P2 review; opened R-003 (single-host blob store). |
 | 2026-05-30 | Project lead | P3 review; R-001 next review deferred to P4; R-002 partially mitigated (llama3.2 benchmarked). |
+| 2026-05-31 | Project lead | P8 review; R-003 mitigated (S3 adapter); opened R-004, R-005, R-006; standing categories resolved. |

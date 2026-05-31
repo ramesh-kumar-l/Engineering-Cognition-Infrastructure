@@ -1,0 +1,93 @@
+groups:
+  - name: eci_slo
+    interval: 30s
+    rules:
+
+      # --- Availability SLO: 99.5% over 5-minute window ---
+      - alert: ECILowAvailability
+        expr: >
+          (
+            sum(rate(eci_requests_total{outcome!="error"}[5m]))
+            /
+            sum(rate(eci_requests_total[5m]))
+          ) < 0.990
+        for: 5m
+        labels:
+          severity: critical
+          slo: availability
+        annotations:
+          summary: "ECI availability below 99.0% SLO burn rate"
+          description: >
+            ECI request success rate is {{ printf "%.2f" $value | humanizePercentage }}
+            (SLO: 99.5%). Sustained for 5 minutes.
+
+      # --- Latency SLO: p95 ≤ 500ms ---
+      - alert: ECIHighLatencyP95
+        expr: >
+          histogram_quantile(
+            0.95,
+            sum(rate(eci_request_latency_seconds_bucket[5m])) by (le)
+          ) > 0.6
+        for: 5m
+        labels:
+          severity: warning
+          slo: latency_p95
+        annotations:
+          summary: "ECI p95 latency above 600ms (SLO: 500ms)"
+          description: >
+            p95 latency is {{ $value | humanizeDuration }} sustained for 5 minutes.
+
+      # --- Latency SLO: p99 ≤ 1500ms ---
+      - alert: ECIHighLatencyP99
+        expr: >
+          histogram_quantile(
+            0.99,
+            sum(rate(eci_request_latency_seconds_bucket[5m])) by (le)
+          ) > 2.0
+        for: 5m
+        labels:
+          severity: critical
+          slo: latency_p99
+        annotations:
+          summary: "ECI p99 latency above 2s (SLO: 1500ms)"
+          description: >
+            p99 latency is {{ $value | humanizeDuration }} sustained for 5 minutes.
+
+      # --- Auth deny spike ---
+      - alert: ECIAuthDenySpike
+        expr: sum(rate(eci_auth_denied_total[2m])) * 60 > 20
+        for: 2m
+        labels:
+          severity: warning
+          slo: security
+        annotations:
+          summary: "ECI auth deny rate above 20/min"
+          description: >
+            Auth denials: {{ $value | humanize }}/min over 2 minutes. Possible
+            credential brute-force or misconfigured client.
+
+      # --- Service down ---
+      - alert: ECIServiceDown
+        expr: up{job="eci_api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          slo: availability
+        annotations:
+          summary: "ECI API is unreachable"
+          description: "Prometheus cannot scrape ECI API metrics endpoint."
+
+  - name: eci_ingest
+    rules:
+      # Ingest error spike
+      - alert: ECIIngestErrorSpike
+        expr: >
+          sum(rate(eci_ingest_total{outcome="error"}[5m])) * 60 > 5
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ECI ingest error rate above 5/min"
+          description: >
+            Ingest errors: {{ $value | humanize }}/min for 3 minutes. Check
+            parser logs and blob store connectivity.

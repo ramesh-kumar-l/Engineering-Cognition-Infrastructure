@@ -22,6 +22,7 @@ This file records architectural patterns, standards, and conventions that span t
 | [ADR-007](architecture-decisions/ADR-007-execution-model.md) | Execution intelligence model | Accepted |
 | [ADR-008](architecture-decisions/ADR-008-reflection-model.md) | Reflection engine domain model | Accepted |
 | [ADR-009](architecture-decisions/ADR-009-enterprise-rbac.md) | Enterprise RBAC, multi-tenancy, OIDC SSO | Accepted |
+| [ADR-010](architecture-decisions/ADR-010-production-hardening.md) | Production hardening strategy | Accepted |
 
 ## Cross-cutting Patterns
 
@@ -124,10 +125,22 @@ Each stage emits an OTel span. Malformed JSON from the LLM degrades gracefully
 - **Retrieval per-source filtering**: `RetrievalRequest.tenant_id` is threaded into FTSService and VectorService SQL queries (`AND tenant_id = :tenant_id`) when set. Citations returned only from the caller's tenant corpus.
 - **Audit actor**: `RequestContext.actor` (email from JWT) is available for wiring into AuditEvent in P8.
 
+### Release pattern (P8)
+Every release candidate must pass before promotion to staging or production:
+1. **Eval gate** (`scripts/eval_gate.py`) — all eval contract files present; corpus benchmarks pass when corpus available.
+2. **Dependency scan** (`pip-audit`) — no HIGH/CRITICAL CVEs in the dependency tree.
+3. **SAST** (`bandit -ll`) — no medium+ severity findings in `apps/` or `packages/`.
+4. **Container scan** (`trivy`) — no CRITICAL/HIGH CVEs in the production Docker image.
+5. **Docker image** built and pushed to GHCR; image digest recorded in the release artifact.
+6. **Deploy** gated by a GitHub `staging` environment (required reviewers).
+
+SLOs measured continuously via Prometheus + Grafana (`infra/grafana/dashboards/eci-slo.json`).
+Alerts fire on burn-rate violations (`infra/prometheus/alerts/eci.yml`) → Alertmanager.
+
 ## Patterns Deferred to Later Phases
 - LLM-runtime abstraction → Phase 3 ✅ (done).
 - Hybrid retrieval + citation pattern → Phase 4 ✅ (done).
 - Execution + traceability pattern → Phase 5 ✅ (done).
 - Reflection + lesson register pattern → Phase 6 ✅ (done).
 - RBAC + tenancy pattern → Phase 7 ✅ (done).
-- Release pattern (eval-gated, SLO-monitored) → Phase 8.
+- Release pattern (eval-gated, SLO-monitored) → Phase 8 ✅ (done).

@@ -1,0 +1,36 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: [alertname, slo]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: default
+
+  routes:
+    - matchers:
+        - severity = critical
+      receiver: critical
+      repeat_interval: 1h
+
+receivers:
+  - name: default
+    # Wire in your notification channel here:
+    # webhook_configs, slack_configs, pagerduty_configs, email_configs, etc.
+    # Example (Slack):
+    # slack_configs:
+    #   - api_url: "${SLACK_WEBHOOK_URL}"
+    #     channel: "#eci-alerts"
+    #     text: "{{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}"
+
+  - name: critical
+    # Critical alerts should page on-call immediately.
+    # Wire in PagerDuty, OpsGenie, or similar.
+
+inhibit_rules:
+  - source_matchers:
+      - severity = critical
+    target_matchers:
+      - severity = warning
+    equal: [alertname]
