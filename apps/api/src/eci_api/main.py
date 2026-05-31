@@ -75,6 +75,11 @@ def create_app() -> FastAPI:
     app.include_router(goals.router)
     app.include_router(tasks.router)
 
+    from eci_api.routers import lessons, retrospectives
+
+    app.include_router(retrospectives.router)
+    app.include_router(lessons.router)
+
     @app.get("/metrics", include_in_schema=False)
     def metrics() -> Response:
         return Response(generate_latest(REGISTRY), media_type=CONTENT_TYPE_LATEST)

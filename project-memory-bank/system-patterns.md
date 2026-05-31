@@ -20,6 +20,7 @@ This file records architectural patterns, standards, and conventions that span t
 | [ADR-005](architecture-decisions/ADR-005-llm-runtime.md) | LLM runtime abstraction | Accepted |
 | ADR-006 | Retrieval strategy (RRF over neural reranker) | Accepted |
 | [ADR-007](architecture-decisions/ADR-007-execution-model.md) | Execution intelligence model | Accepted |
+| [ADR-008](architecture-decisions/ADR-008-reflection-model.md) | Reflection engine domain model | Accepted |
 
 ## Cross-cutting Patterns
 
@@ -106,10 +107,18 @@ Each stage emits an OTel span. Malformed JSON from the LLM degrades gracefully
 - **Status changes audited via shared `AuditEvent` table**: every `update_status()` call appends `{action: "goal.status_change", prior_state: {status: ...}, new_state: {status: ...}}`.
 - **Cycle-safe task dependencies**: `add_dependency()` runs BFS before inserting an edge; raises `DependencyCycleError` if the edge would close a cycle.
 
+### Reflection + lesson register pattern (P6)
+`RetrospectiveService`, `LessonService`, `PatternExtractor` form the reflection domain (ADR-008):
+- **Synchronous retrospective runs**: `POST /retrospectives` creates a `Retrospective` row (status=`running`), queries completed goals/tasks in scope, calls `PatternExtractor` (LLM-backed, offline-first via Ollama), creates `Lesson` rows, then transitions status to `completed`. Async cadence deferred to P8.
+- **`LessonEvidence` as a separate table**: evidence for lessons is coarser than retrieval chunks — it stores whole goal/task pointers + a human-readable summary of why the item supports the claim. Not reusing `ExecutionCitation` (different semantic).
+- **Lesson supersession**: a new lesson that replaces an old one sets `supersedes_id = old_lesson_id`; the old lesson's status transitions to `superseded`. The transition is recorded in `AuditEvent` (same shared table used by P5 status changes).
+- **LLM malformation is tolerated**: if the LLM returns malformed JSON or an empty array, the retrospective completes with 0 lessons — the caller can always create lessons manually via `POST /lessons`.
+- **Reflection runs are themselves citable**: every `Lesson` carries `retrospective_id`; clients can trace a lesson back to the run that generated it and thence to the execution history.
+
 ## Patterns Deferred to Later Phases
 - LLM-runtime abstraction → Phase 3 ✅ (done).
 - Hybrid retrieval + citation pattern → Phase 4 ✅ (done).
 - Execution + traceability pattern → Phase 5 ✅ (done).
-- Reflection + lesson register pattern → Phase 6.
+- Reflection + lesson register pattern → Phase 6 ✅ (done).
 - RBAC + tenancy pattern → Phase 7.
 - Release pattern (eval-gated, SLO-monitored) → Phase 8.

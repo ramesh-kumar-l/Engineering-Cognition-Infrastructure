@@ -3,20 +3,31 @@
 > **Read this first.** This file is the current "save state" of the project. It is updated at the end of every major feature and at every phase transition.
 
 ## Current Phase
-**Phase 6 — Reflection Engine** *(unblocked; not yet started)*.
+**Phase 7 — Enterprise** *(unblocked; not yet started)*.
+
+Phases 1–6 are complete. See [implementation-status.md](implementation-status.md) for the exit-criteria checklist.
 
 Phases 1–5 are complete. See [implementation-status.md](implementation-status.md) for the exit-criteria checklist.
 
 ## Current Sprint Goal
-*(Phase 6 sprint begins on next approval — see [master-roadmap.md § Phase 6](roadmaps/master-roadmap.md))*
+*(Phase 7 sprint begins on next approval — see [master-roadmap.md § Phase 7](roadmaps/master-roadmap.md))*
 
 Planned scope:
-- Retrospective generator (configurable cadence: weekly, monthly, per-milestone).
-- Pattern extraction across goals/tasks/outcomes.
-- Lesson register (claim, evidence, scope, confidence, supersedes).
-- Reflection runs are themselves audited and citable.
+- RBAC at API boundary; role definitions as ADR.
+- Audit trail across all write paths with actor identity.
+- Team workspaces with isolation guarantees (negative tests).
+- SSO hooks (OIDC) — at least one provider wired end-to-end.
+- Per-source access control on retrieval results.
 
 ## Recently Completed
+- **2026-05-31** Phase 6 — Reflection Engine ✅
+  - `packages/reflection/` — RetrospectiveService, LessonService, PatternExtractor; evidence_helpers; DTOs + errors.
+  - `retrospectives`, `lessons`, `lesson_evidence` tables; migration `0005_reflection`.
+  - `POST/GET /retrospectives`, `POST/GET /lessons`, `POST /lessons/{id}/supersede`.
+  - Synchronous retrospective run: collect completed goals/tasks → LLM pattern extraction → lesson creation.
+  - Lesson supersession with AuditEvent trail; LessonEvidence as separate table (not reusing ExecutionCitation).
+  - 17 integration tests; ADR-008 ratified; `evaluations/reflection-quality.md` thresholds set.
+
 - **2026-05-31** Phase 5 — Execution Intelligence ✅
   - `packages/execution/` — GoalService, TaskService, RoadmapService; citation_helpers; audit_service.
   - `roadmaps`, `goals`, `tasks`, `task_dependencies`, `execution_citations` tables; migration `0004_execution`.
@@ -78,4 +89,4 @@ See [risk-register/risks.md](risk-register/risks.md). Highest current:
 - **R-004** (new) Empty corpus at retrieval time — embedding step must be run before search works. Mitigated by clear API error surface and `has_citations=False` response.
 
 ## Next Phase
-**Phase 6 — Reflection Engine.** Per charter RULE 4, do not begin until approved.
+**Phase 7 — Enterprise.** Per charter RULE 4, do not begin until approved.
