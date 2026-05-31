@@ -2,7 +2,7 @@
         db-up db-down db-migrate db-reset test-integration clean
 
 PY := uv run
-PYTHON_PKGS := apps/api packages/observability packages/storage packages/ingest packages/llm packages/compression packages/retrieval
+PYTHON_PKGS := apps/api packages/observability packages/storage packages/ingest packages/llm packages/compression packages/retrieval packages/execution
 
 help:
 	@echo "Targets:"

@@ -8,6 +8,9 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from eci_compression.compression_service import CompressionService
+from eci_execution.goal_service import GoalService
+from eci_execution.roadmap_service import RoadmapService
+from eci_execution.task_service import TaskService
 from eci_ingest import (
     DocumentIngestService,
     NoteIngestService,
@@ -90,3 +93,15 @@ def get_memory_service(
     provider: EmbeddingProvider = Depends(get_embedding_provider),
 ) -> MemoryService:
     return MemoryService(session, provider)
+
+
+def get_goal_service(session: Session = Depends(get_db)) -> GoalService:
+    return GoalService(session)
+
+
+def get_task_service(session: Session = Depends(get_db)) -> TaskService:
+    return TaskService(session)
+
+
+def get_roadmap_service(session: Session = Depends(get_db)) -> RoadmapService:
+    return RoadmapService(session)

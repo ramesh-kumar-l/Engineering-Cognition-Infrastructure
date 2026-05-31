@@ -3,20 +3,30 @@
 > **Read this first.** This file is the current "save state" of the project. It is updated at the end of every major feature and at every phase transition.
 
 ## Current Phase
-**Phase 5 — Execution Intelligence** *(unblocked; not yet started)*.
+**Phase 6 — Reflection Engine** *(unblocked; not yet started)*.
 
-Phases 1–4 are complete. See [implementation-status.md](implementation-status.md) for the exit-criteria checklist.
+Phases 1–5 are complete. See [implementation-status.md](implementation-status.md) for the exit-criteria checklist.
 
 ## Current Sprint Goal
-*(Phase 5 sprint begins on next approval — see [master-roadmap.md § Phase 5](roadmaps/master-roadmap.md))*
+*(Phase 6 sprint begins on next approval — see [master-roadmap.md § Phase 6](roadmaps/master-roadmap.md))*
 
 Planned scope:
-- `Goal`, `Task`, `Roadmap` domain models with dependency edges and status.
-- Every execution item linked back to the source memory (citation chain from P4).
-- Status-change audit log (actor, before, after, reason).
-- `GET /goals/{id}/why` — returns source citations justifying the goal.
+- Retrospective generator (configurable cadence: weekly, monthly, per-milestone).
+- Pattern extraction across goals/tasks/outcomes.
+- Lesson register (claim, evidence, scope, confidence, supersedes).
+- Reflection runs are themselves audited and citable.
 
 ## Recently Completed
+- **2026-05-31** Phase 5 — Execution Intelligence ✅
+  - `packages/execution/` — GoalService, TaskService, RoadmapService; citation_helpers; audit_service.
+  - `roadmaps`, `goals`, `tasks`, `task_dependencies`, `execution_citations` tables; migration `0004_execution`.
+  - POST/GET /roadmaps, POST/GET/PATCH /goals, POST/GET/PATCH /tasks, POST /tasks/{id}/dependencies.
+  - `GET /goals/{id}/why` + `GET /tasks/{id}/why` — return pre-stored citations (no live retrieval).
+  - Citation chain inherited at creation: clients submit citations from prior `/retrieval/search`.
+  - Status-change audit reuses existing `AuditEvent` table (actor, prior_state, new_state, reason).
+  - BFS cycle detection for task dependency graph; `DependencyCycleError` on violation.
+  - 24 integration tests; ADR-007 ratified.
+
 - **2026-05-30** Phase 4 — Engineering Memory ✅
   - `packages/retrieval/` — EmbeddingService, FTSService, VectorService, RRFReranker, HybridRetriever, CitationEngine, MemoryService.
   - `chunk_embeddings` + `memory_entries` tables; migration `0003_retrieval` (pgvector HNSW + GIN FTS indices).
@@ -68,4 +78,4 @@ See [risk-register/risks.md](risk-register/risks.md). Highest current:
 - **R-004** (new) Empty corpus at retrieval time — embedding step must be run before search works. Mitigated by clear API error surface and `has_citations=False` response.
 
 ## Next Phase
-**Phase 5 — Execution Intelligence.** Per charter RULE 4, do not begin until approved.
+**Phase 6 — Reflection Engine.** Per charter RULE 4, do not begin until approved.

@@ -67,11 +67,19 @@ Legend: ✅ done · 🟡 in progress · ⬜ not started · ⛔ blocked
 
 ---
 
-## Phase 5 — Execution Intelligence ⬜
+## Phase 5 — Execution Intelligence ✅
 
-- ⬜ Goal / Task / Roadmap models linked to source memory.
-- ⬜ Status-change audit log.
-- ⬜ "Why does this task exist?" returns cited justification.
+- ✅ `packages/execution/` — `GoalService`, `TaskService`, `RoadmapService`; `citation_helpers`; `audit_service`; DTOs + errors.
+- ✅ Storage: `roadmaps`, `goals`, `tasks`, `task_dependencies`, `execution_citations` tables; Alembic migration `0004_execution`.
+- ✅ Storage models: `Roadmap`, `Goal`, `Task`, `TaskDependency`, `ExecutionCitation` — registered in `eci_storage.models`.
+- ✅ API: `POST/GET /roadmaps`, `POST/GET/PATCH /goals`, `POST/GET/PATCH /tasks`, `POST /tasks/{id}/dependencies`, `GET /goals/{id}/why`, `GET /tasks/{id}/why`.
+- ✅ Citation chain inherited at creation — clients submit `CitationInput[]` from prior `/retrieval/search`; stored in `execution_citations`.
+- ✅ Status-change audit via shared `AuditEvent` table (actor, action, prior_state, new_state, reason).
+- ✅ Cycle-safe task dependencies: BFS cycle detection before insert; `DependencyCycleError` on violation.
+- ✅ Integration tests: goal service (7 tests), task service (9 tests), roadmap service (4 tests), audit invariants (4 tests).
+- ✅ ADR-007 (execution model) — Accepted.
+
+**Quality gates:** Architecture ✅ (ADR-007) · Security ✅ (write paths audited; actor defaults to "system", P7 adds identity) · Testing ✅ (integration tests against real Postgres) · Observability ✅ (structlog per operation) · Documentation ✅ (ADR + system-patterns updated) · Performance ✅ (indexed status/roadmap/goal columns; BFS O(V+E) for cycle detection).
 
 ---
 

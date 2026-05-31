@@ -18,6 +18,8 @@ This file records architectural patterns, standards, and conventions that span t
 | [ADR-003](architecture-decisions/ADR-003-repo-and-branching.md) | Repository layout and branching | Accepted |
 | [ADR-004](architecture-decisions/ADR-004-storage-layout.md) | Storage layout for captured knowledge | Accepted |
 | [ADR-005](architecture-decisions/ADR-005-llm-runtime.md) | LLM runtime abstraction | Accepted |
+| ADR-006 | Retrieval strategy (RRF over neural reranker) | Accepted |
+| [ADR-007](architecture-decisions/ADR-007-execution-model.md) | Execution intelligence model | Accepted |
 
 ## Cross-cutting Patterns
 
@@ -88,10 +90,26 @@ Callers never import a concrete class — only the Protocol and the factory func
 Each stage emits an OTel span. Malformed JSON from the LLM degrades gracefully
 (empty fields) rather than raising, per AP-2 (partial evidence > no evidence).
 
+### Hybrid retrieval + citation pattern (P4)
+`HybridRetriever.retrieve(request)` orchestrates:
+1. `FTSService` (Postgres `websearch_to_tsquery` + GIN)
+2. `VectorService` (pgvector HNSW cosine ANN)
+3. `RRFReranker` (Reciprocal Rank Fusion, k=60)
+4. `CitationEngine` (batch-fetches source titles + URIs)
+
+"No answer without provenance" — `RetrievalResult.has_citations` is an explicit boolean; every `Citation` carries `source_id`, `source_uri`, `title`. See ADR-006.
+
+### Execution + traceability pattern (P5)
+`GoalService`, `TaskService`, `RoadmapService` form the execution domain (ADR-007):
+- **Citation chain inherited at creation**: clients submit `CitationInput[]` (sourced from `/retrieval/search`) when creating goals or tasks; these are persisted as `ExecutionCitation` rows (polymorphic `target_type`/`target_id`).
+- **`GET /goals/{id}/why` / `GET /tasks/{id}/why`**: return pre-stored citations — no live retrieval, deterministic, auditable.
+- **Status changes audited via shared `AuditEvent` table**: every `update_status()` call appends `{action: "goal.status_change", prior_state: {status: ...}, new_state: {status: ...}}`.
+- **Cycle-safe task dependencies**: `add_dependency()` runs BFS before inserting an edge; raises `DependencyCycleError` if the edge would close a cycle.
+
 ## Patterns Deferred to Later Phases
 - LLM-runtime abstraction → Phase 3 ✅ (done).
-- Hybrid retrieval + citation pattern → Phase 4.
-- Execution + traceability pattern → Phase 5.
+- Hybrid retrieval + citation pattern → Phase 4 ✅ (done).
+- Execution + traceability pattern → Phase 5 ✅ (done).
 - Reflection + lesson register pattern → Phase 6.
 - RBAC + tenancy pattern → Phase 7.
 - Release pattern (eval-gated, SLO-monitored) → Phase 8.

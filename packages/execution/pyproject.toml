@@ -1,0 +1,23 @@
+[project]
+name = "eci-execution"
+version = "0.1.0"
+description = "ECI Phase 5 — execution intelligence: goals, tasks, roadmaps with citation traceability."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.4.0",
+    "sqlalchemy>=2.0.30",
+    "eci-observability",
+    "eci-storage",
+]
+
+[tool.uv.sources]
+eci-observability = { workspace = true }
+eci-storage = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/eci_execution"]

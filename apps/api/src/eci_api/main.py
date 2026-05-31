@@ -69,6 +69,12 @@ def create_app() -> FastAPI:
     app.include_router(retrieval.router)
     app.include_router(memory.router)
 
+    from eci_api.routers import goals, roadmaps, tasks
+
+    app.include_router(roadmaps.router)
+    app.include_router(goals.router)
+    app.include_router(tasks.router)
+
     @app.get("/metrics", include_in_schema=False)
     def metrics() -> Response:
         return Response(generate_latest(REGISTRY), media_type=CONTENT_TYPE_LATEST)
