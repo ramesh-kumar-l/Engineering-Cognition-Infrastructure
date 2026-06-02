@@ -1,0 +1,57 @@
+# ============================================================
+# ECI — Engineering Cognition Infrastructure
+# requirements.txt  (Python 3.12)
+#
+# This file pins the *direct* runtime dependencies for the
+# full ECI stack.  It is kept in sync with the individual
+# package pyproject.toml files in packages/ and apps/api/.
+#
+# ── HOW TO INSTALL ──────────────────────────────────────────
+# Preferred (uv workspace — fastest, lock-file guaranteed):
+#   uv sync --all-packages
+#
+# Plain pip (use a virtual-env first):
+#   python -m venv .venv
+#   source .venv/bin/activate   # Windows: .venv\Scripts\activate
+#   pip install -r requirements.txt
+#
+# ── OPTIONAL EXTRAS ─────────────────────────────────────────
+# Cloud LLM providers (any/all):
+#   pip install -r requirements-llm-cloud.txt
+#
+# S3 blob store backend:
+#   pip install boto3>=1.34.0
+# ============================================================
+
+# ── Web framework ────────────────────────────────────────────
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+
+# ── Data validation + settings ──────────────────────────────
+pydantic>=2.7.0
+pydantic-settings>=2.4.0
+
+# ── Database + ORM ──────────────────────────────────────────
+sqlalchemy>=2.0.30
+psycopg[binary]>=3.2.0          # psycopg3 async-ready Postgres driver
+alembic>=1.13.0                  # schema migrations
+pgvector>=0.3.0                  # pgvector SQLAlchemy integration
+
+# ── Document parsing (ingestion) ────────────────────────────
+pypdf>=4.3.0                     # PDF extraction
+python-frontmatter>=1.1.0        # YAML front-matter in Markdown
+
+# ── HTTP client (LLM providers, OIDC) ───────────────────────
+httpx>=0.27.0
+
+# ── Identity / JWT ──────────────────────────────────────────
+python-jose[cryptography]>=3.3.0 # OIDC code exchange + local JWT signing
+
+# ── Observability ────────────────────────────────────────────
+opentelemetry-api>=1.27.0
+opentelemetry-sdk>=1.27.0
+opentelemetry-exporter-otlp>=1.27.0
+opentelemetry-instrumentation-fastapi>=0.48b0
+prometheus-client>=0.20.0
+structlog>=24.0.0
+langfuse>=2.50.0                 # LLM call tracing (fails soft if unreachable)

@@ -7,6 +7,7 @@ from eci_observability.config import ObservabilityConfig, load_config
 from eci_observability.langfuse_export import LangfuseClient, get_langfuse
 from eci_observability.logging import bind_trace_id, get_logger, setup_logging
 from eci_observability.metrics import (
+    ingest_bytes,
     ingest_counter,
     request_counter,
     setup_metrics,
@@ -37,6 +38,7 @@ __all__ = [
     "get_langfuse",
     "get_logger",
     "get_tracer",
+    "ingest_bytes",
     "ingest_counter",
     "load_config",
     "request_counter",

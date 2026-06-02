@@ -1,0 +1,15 @@
+# ============================================================
+# ECI — Cloud LLM provider extras
+# Install in addition to requirements.txt when you want
+# OpenAI, Anthropic, or OpenRouter as the LLM backend.
+#
+# Usage:
+#   pip install -r requirements.txt -r requirements-llm-cloud.txt
+#
+# Then set the provider via env:
+#   ECI_LLM_PROVIDER=openai   ECI_LLM_API_KEY=sk-...
+#   ECI_LLM_PROVIDER=anthropic ECI_LLM_API_KEY=sk-ant-...
+# ============================================================
+
+openai>=1.40.0
+anthropic>=0.34.0

@@ -1,32 +1,48 @@
+name: eci-prod
+
 services:
   api:
     image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-eci}/eci-api:${IMAGE_TAG:-latest}
     build:
       context: ../..
       dockerfile: infra/docker/api.Dockerfile
+      tags:
+        - docker-ingestion-api:${IMAGE_TAG:-latest}
     ports:
-      - "8000:8000"
+      - "${ECI_API_PORT:-8000}:8000"
     environment:
-      ECI_DB_URL: postgresql+psycopg://eci:${POSTGRES_PASSWORD}@postgres:5432/eci
-      ECI_OTEL_ENDPOINT: http://otel-collector:4317
+      ECI_ENV: prod
+      ECI_DB_URL: postgresql+psycopg://eci:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/eci
       ECI_PROMETHEUS_PORT: "9464"
       ECI_BLOB_BACKEND: ${ECI_BLOB_BACKEND:-local}
       ECI_BLOB_ROOT: /data/blobs
       ECI_BLOB_S3_BUCKET: ${ECI_BLOB_S3_BUCKET:-}
       ECI_BLOB_S3_REGION: ${ECI_BLOB_S3_REGION:-us-east-1}
-      ECI_IDENTITY_LOCAL_JWT_SECRET: ${ECI_JWT_SECRET}
+      ECI_IDENTITY_LOCAL_JWT_SECRET: ${ECI_JWT_SECRET:?ECI_JWT_SECRET is required}
     volumes:
       - eci_blobs:/data/blobs
     depends_on:
       postgres:
         condition: service_healthy
+      prometheus:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      default:
+        aliases:
+          - docker-ingestion-api
 
   postgres:
     image: pgvector/pgvector:pg16
     environment:
       POSTGRES_USER: eci
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       POSTGRES_DB: eci
     volumes:
       - eci_pgdata:/var/lib/postgresql/data
@@ -48,8 +64,14 @@ services:
       - --storage.tsdb.retention.time=30d
       - --web.enable-lifecycle
     ports:
-      - "9090:9090"
+      - "${ECI_PROMETHEUS_HOST_PORT:-9090}:9090"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9090/-/healthy >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   alertmanager:
     image: prom/alertmanager:v0.27.0
@@ -57,8 +79,14 @@ services:
       - ../alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
       - alertmanager_data:/alertmanager
     ports:
-      - "9093:9093"
+      - "${ECI_ALERTMANAGER_PORT:-9093}:9093"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:9093/-/healthy >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   grafana:
     image: grafana/grafana:11.1.0
@@ -67,14 +95,22 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_ANALYTICS_REPORTING_ENABLED: "false"
     volumes:
-      - ../grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../grafana/provisioning/dashboards.yml:/etc/grafana/provisioning/dashboards/eci-dashboards.yml:ro
+      - ../grafana/provisioning/datasources.yml:/etc/grafana/provisioning/datasources/eci-datasources.yml:ro
       - ../grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana_data:/var/lib/grafana
     ports:
-      - "3000:3000"
+      - "${ECI_GRAFANA_PORT:-3000}:3000"
     depends_on:
-      - prometheus
+      prometheus:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3000/api/health | grep -q '\"database\":\"ok\"'"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
 volumes:
   eci_pgdata:
