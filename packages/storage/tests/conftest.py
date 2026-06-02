@@ -28,11 +28,12 @@ def engine() -> Iterator[Engine]:
     eng = create_engine(url, future=True, pool_pre_ping=True)
     # Ensure schema exists. CI runs alembic; locally we fall back to create_all.
     with eng.begin() as conn:
+        conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         result = conn.execute(
             text("SELECT to_regclass('public.raw_blobs')")
         ).scalar()
         if result is None:
-            Base.metadata.create_all(eng)
+            Base.metadata.create_all(conn)
     yield eng
     eng.dispose()
 
@@ -48,5 +49,6 @@ def db_session(engine: Engine) -> Iterator[Session]:
         yield session
     finally:
         session.close()
-        transaction.rollback()
+        if transaction.is_active:
+            transaction.rollback()
         connection.close()
