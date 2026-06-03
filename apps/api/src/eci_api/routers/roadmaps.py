@@ -38,8 +38,12 @@ class RoadmapResponse(BaseModel):
 def create_roadmap(
     body: CreateRoadmapRequest,
     svc: RoadmapService = Depends(get_roadmap_service),
+    ctx: RequestContext = Depends(get_request_context),
 ) -> RoadmapResponse:
-    out = svc.create_roadmap(RoadmapInput(title=body.title, description=body.description))
+    out = svc.create_roadmap(
+        RoadmapInput(title=body.title, description=body.description),
+        tenant_id=ctx.tenant_id,
+    )
     return RoadmapResponse(id=out.id, title=out.title, description=out.description)
 
 

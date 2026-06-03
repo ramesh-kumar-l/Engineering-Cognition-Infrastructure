@@ -36,13 +36,14 @@ class GoalService:
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def create_goal(self, inp: GoalInput) -> GoalOut:
+    def create_goal(self, inp: GoalInput, tenant_id: uuid.UUID | None = None) -> GoalOut:
         goal = Goal(
             title=inp.title,
             description=inp.description,
             status="pending",
             roadmap_id=inp.roadmap_id,
             source_memory_id=inp.source_memory_id,
+            tenant_id=tenant_id,
         )
         self._session.add(goal)
         self._session.flush()

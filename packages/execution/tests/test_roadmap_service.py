@@ -41,6 +41,24 @@ def test_list_roadmaps(db_session: Session) -> None:
 
 
 @pytest.mark.integration
+def test_create_roadmap_is_scoped_to_tenant(db_session: Session) -> None:
+    """A roadmap created with a tenant_id is only visible to that tenant's list."""
+    from eci_storage.models.tenant import Tenant
+
+    tenant = Tenant(name="Acme", slug=f"acme-{uuid.uuid4().hex[:8]}")
+    db_session.add(tenant)
+    db_session.flush()
+
+    svc = RoadmapService(db_session)
+    svc.create_roadmap(RoadmapInput(title="Scoped Roadmap"), tenant_id=tenant.id)
+
+    in_tenant = svc.list_roadmaps(tenant_id=tenant.id)
+    assert [r.title for r in in_tenant] == ["Scoped Roadmap"]
+    # A different tenant must not see it.
+    assert svc.list_roadmaps(tenant_id=uuid.uuid4()) == []
+
+
+@pytest.mark.integration
 def test_goals_linked_to_roadmap(db_session: Session) -> None:
     rm_svc = RoadmapService(db_session)
     goal_svc = GoalService(db_session)

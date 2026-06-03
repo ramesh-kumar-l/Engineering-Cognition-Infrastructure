@@ -57,7 +57,7 @@ class TaskService:
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def create_task(self, inp: TaskInput) -> TaskOut:
+    def create_task(self, inp: TaskInput, tenant_id: uuid.UUID | None = None) -> TaskOut:
         task = Task(
             title=inp.title,
             description=inp.description,
@@ -65,6 +65,7 @@ class TaskService:
             goal_id=inp.goal_id,
             position=inp.position,
             source_memory_id=inp.source_memory_id,
+            tenant_id=tenant_id,
         )
         self._session.add(task)
         self._session.flush()

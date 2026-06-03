@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ECI_TEST_DB_URL=\"postgresql+psycopg://eci:eci@localhost:5432/eci_test\" .venv/Scripts/python.exe -m pytest apps/api/tests -q)",
+      "Bash(ECI_TEST_DB_URL=\"postgresql+psycopg://eci:eci@localhost:5432/eci_test\" .venv/Scripts/python.exe -m pytest packages/identity/tests -q)"
+    ]
+  }
+}

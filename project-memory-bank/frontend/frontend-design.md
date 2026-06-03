@@ -1,9 +1,9 @@
 # Frontend Design — ECI Web (Premium, Provenance-First)
 
-Status: **Phase B complete** (Ingest + Compress). Phase A (scaffold + Search slice) done.
-Source of truth for all frontend phases. Backend is GA-ready and unchanged; the web app is
-an additive `apps/web/` service that surfaces existing API provenance — it never re-derives
-evidence.
+Status: **Phase C complete** (Execution). Phases A (scaffold + Search) and B (Ingest +
+Compress) done. Source of truth for all frontend phases. The web app is an additive
+`apps/web/` service that surfaces existing API provenance — it never re-derives evidence.
+One small, approved backend change was required in Phase C (see Phase C notes).
 
 ## Principles (inherited from system-patterns.md)
 - **Evidence before inference (AP-2)** → provenance is always visible; fail-closed UI
@@ -50,8 +50,8 @@ local components) · TanStack Query + TanStack Router · Zod · Vitest + Testing
 ## Phase status
 - A: scaffold + Search vertical slice ✅
 - B: Ingest + Compress ✅
-- C: Execution (+ WhyDrawer) ← next
-- D: Reflection
+- C: Execution (+ WhyDrawer) ✅
+- D: Reflection ← next
 - E: Observability & guidance polish + full validation
 
 ## Phase B notes (Ingest + Compress)
@@ -68,3 +68,23 @@ local components) · TanStack Query + TanStack Router · Zod · Vitest + Testing
   LLM-free and fully functional. To exercise the full loop: install Ollama + pull
   `nomic-embed-text` (embeddings) and a chat model, or set a cloud provider env var.
 - Backend run with `ECI_IDENTITY_AUTH_DISABLED=true` (dev-bypass); no backend code changed.
+
+## Phase C notes (Execution)
+- `features/execution/` — master-detail across three columns: `RoadmapPanel` (create/select),
+  `GoalPanel` (create/status/Why for the active roadmap), `TaskPanel` (create/status/upstream
+  dependency/Why for the active goal). One `execution.api.ts` + one `use-execution.ts`.
+- Shared provenance: `components/provenance/why-drawer.tsx` (Radix Dialog slide-over) renders
+  `GET /goals|tasks/{id}/why` citations via the existing `CitationCard`. Fail-closed (AP-2):
+  no stored evidence → explicit "unverifiable" amber notice.
+- `StatusSelect` maps the backend's 5 valid statuses (pending/in_progress/completed/blocked/
+  cancelled). Dependencies post `{upstream_id}`; 409 cycle errors surface inline.
+- Endpoints used: `POST/GET /roadmaps`, `POST/GET /goals(?roadmap_id=)`, `PATCH /goals/{id}/status`,
+  `GET /goals/{id}/why`, `POST/GET /tasks(?goal_id=)`, `PATCH /tasks/{id}/status`,
+  `POST /tasks/{id}/dependencies`, `GET /tasks/{id}/why`. Execution is LLM-free → works without Ollama.
+- **Approved backend change (the only one so far).** List endpoints scope by request-context
+  `tenant_id`, but create paths wrote `tenant_id=NULL`, so lists returned `[]` for any tenant
+  (prod bug, not just dev). Fix (user-approved): thread `ctx.tenant_id` into `create_roadmap/
+  create_goal/create_task` (default `None` keeps existing service tests valid). The dev tenant
+  `…0001` wasn't seeded, causing an FK violation, so added `apps/api/dev_seed.py` —
+  idempotent seed of the dev tenant+user, run from the lifespan **only when auth is disabled**
+  (no-op in production). New integration test: `test_create_roadmap_is_scoped_to_tenant`.

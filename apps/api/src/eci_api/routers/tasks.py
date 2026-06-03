@@ -80,6 +80,7 @@ def _to_task_resp(out: TaskOut) -> TaskResponse:
 def create_task(
     body: CreateTaskRequest,
     svc: TaskService = Depends(get_task_service),
+    ctx: RequestContext = Depends(get_request_context),
 ) -> TaskResponse:
     inp = TaskInput(
         title=body.title,
@@ -100,7 +101,7 @@ def create_task(
             for c in body.citations
         ],
     )
-    return _to_task_resp(svc.create_task(inp))
+    return _to_task_resp(svc.create_task(inp, tenant_id=ctx.tenant_id))
 
 
 @router.get("", response_model=list[TaskResponse])

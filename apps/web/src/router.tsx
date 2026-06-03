@@ -10,6 +10,7 @@ import { OverviewRoute } from "@/features/overview/overview-route";
 import { SearchRoute } from "@/features/search/search-route";
 import { IngestRoute } from "@/features/ingest/ingest-route";
 import { CompressRoute } from "@/features/compress/compress-route";
+import { ExecutionRoute } from "@/features/execution/execution-route";
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -41,13 +42,7 @@ const compressRoute = createRoute({
 const executionRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/execution",
-  component: () => (
-    <PhasePlaceholder
-      title="Execution"
-      phase="C"
-      summary="Roadmaps, goals, and tasks — each with a 'Why' drawer of stored evidence."
-    />
-  ),
+  component: ExecutionRoute,
 });
 
 const reflectionRoute = createRoute({

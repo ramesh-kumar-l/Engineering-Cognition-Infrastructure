@@ -29,8 +29,10 @@ class RoadmapService:
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def create_roadmap(self, inp: RoadmapInput) -> RoadmapOut:
-        roadmap = Roadmap(title=inp.title, description=inp.description)
+    def create_roadmap(
+        self, inp: RoadmapInput, tenant_id: uuid.UUID | None = None
+    ) -> RoadmapOut:
+        roadmap = Roadmap(title=inp.title, description=inp.description, tenant_id=tenant_id)
         self._session.add(roadmap)
         self._session.flush()
         _log.info("roadmap.created", roadmap_id=str(roadmap.id))

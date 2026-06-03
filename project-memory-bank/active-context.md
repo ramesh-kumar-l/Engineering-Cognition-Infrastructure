@@ -17,6 +17,20 @@ Phase 8 delivered on 2026-05-31. No active sprint.
 - Ollama CI environment — unblocks corpus benchmarks in `scripts/eval_gate.py`.
 
 ## Recently Completed
+- **2026-06-03** Frontend Phase C — Execution ✅ (`apps/web/`)
+  - Roadmaps → goals → tasks master-detail; status transitions, task dependencies (cycle-safe),
+    and a shared `WhyDrawer` (Radix Dialog) rendering `GET /goals|tasks/{id}/why` via `CitationCard`.
+    Fail-closed when no evidence. Execution is LLM-free (works without Ollama).
+  - 12/12 Vitest pass; `npm run build` clean (279 modules). Files all under the 300-line cap.
+  - **One approved backend change** (first since GA): list endpoints scope by `tenant_id` but
+    creates wrote `tenant_id=NULL` → lists returned `[]` for every tenant (a prod bug). Threaded
+    `ctx.tenant_id` into `create_roadmap/goal/task`; added `apps/api/dev_seed.py` (idempotent dev
+    tenant+user seed, lifespan, **auth-disabled only** — no-op in prod). New integration test
+    `test_create_roadmap_is_scoped_to_tenant`; 25/25 execution + 29 identity integration tests pass.
+  - Pre-existing, unrelated failure noted: `apps/api/tests/test_ingest_documents.py::
+    test_unsupported_kind_returns_415` (fails on original code too; not touched here).
+  - Created local `eci_test` DB + migrated to head for integration runs.
+
 - **2026-06-03** Frontend Phase B — Ingest + Compress ✅ (`apps/web/`)
   - Ingest screen: document upload (`POST /documents`) + note capture (`POST /notes`) with
     dedup/provenance result card and typed `?documentId=` handoff to Compress.

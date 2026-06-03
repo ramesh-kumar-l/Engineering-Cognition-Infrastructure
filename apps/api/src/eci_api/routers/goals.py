@@ -99,6 +99,7 @@ def _to_citation_resp(c: CitationOut) -> CitationResponse:
 def create_goal(
     body: CreateGoalRequest,
     svc: GoalService = Depends(get_goal_service),
+    ctx: RequestContext = Depends(get_request_context),
 ) -> GoalResponse:
     inp = GoalInput(
         title=body.title,
@@ -118,7 +119,7 @@ def create_goal(
             for c in body.citations
         ],
     )
-    return _to_goal_resp(svc.create_goal(inp))
+    return _to_goal_resp(svc.create_goal(inp, tenant_id=ctx.tenant_id))
 
 
 @router.get("", response_model=list[GoalResponse])

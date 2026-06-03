@@ -110,3 +110,75 @@ export const EmbedResponseSchema = z.object({
   chunks_embedded: z.number(),
 });
 export type EmbedResponse = z.infer<typeof EmbedResponseSchema>;
+
+// ── Execution ───────────────────────────────────────────────────────────────
+/** Status values the backend accepts for goals and tasks (eci_execution.VALID_STATUSES). */
+export const EXECUTION_STATUSES = [
+  "pending",
+  "in_progress",
+  "completed",
+  "blocked",
+  "cancelled",
+] as const;
+export type ExecutionStatus = (typeof EXECUTION_STATUSES)[number];
+
+/** A roadmap from POST/GET /roadmaps. */
+export const RoadmapSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string().nullish(),
+});
+export type Roadmap = z.infer<typeof RoadmapSchema>;
+export const RoadmapListSchema = z.array(RoadmapSchema);
+
+/** A goal from POST/GET/PATCH /goals. */
+export const GoalSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string().nullish(),
+  status: z.string(),
+  roadmap_id: z.string().nullish(),
+  source_memory_id: z.string().nullish(),
+});
+export type Goal = z.infer<typeof GoalSchema>;
+export const GoalListSchema = z.array(GoalSchema);
+
+/** A task from POST/GET/PATCH /tasks. */
+export const TaskSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string().nullish(),
+  status: z.string(),
+  goal_id: z.string().nullish(),
+  position: z.number(),
+  source_memory_id: z.string().nullish(),
+});
+export type Task = z.infer<typeof TaskSchema>;
+export const TaskListSchema = z.array(TaskSchema);
+
+/** GET /goals|tasks/{id}/why — stored citations. Reuses the lenient CitationSchema
+ *  (extra target_type/target_id fields are ignored). */
+export const WhyListSchema = z.array(CitationSchema);
+
+export interface CreateRoadmapInput {
+  title: string;
+  description?: string;
+}
+
+export interface CreateGoalInput {
+  title: string;
+  description?: string;
+  roadmap_id?: string;
+}
+
+export interface CreateTaskInput {
+  title: string;
+  goal_id?: string;
+  description?: string;
+  position?: number;
+}
+
+export interface StatusUpdateInput {
+  status: string;
+  reason?: string;
+}

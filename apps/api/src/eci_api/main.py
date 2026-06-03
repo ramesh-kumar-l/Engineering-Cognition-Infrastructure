@@ -26,6 +26,9 @@ _log = get_logger("eci_api.main")
 async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     cfg = bootstrap()
     _log.info("api.start", env=cfg.env, service=cfg.service_name)
+    from eci_api.dev_seed import seed_dev_identity
+
+    seed_dev_identity()
     try:
         yield
     finally:
