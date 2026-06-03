@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+/* Engineering-tool aesthetic: calm dark surface, restrained accent, mono for IDs. */
+@theme {
+  --color-accent: oklch(0.72 0.13 235);
+  --color-accent-strong: oklch(0.65 0.16 235);
+  --font-mono: ui-monospace, "JetBrains Mono", "SFMono-Regular", Menlo, monospace;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-zinc-950 text-zinc-100 antialiased;
+  font-feature-settings: "cv02", "cv03", "cv04";
+}
+
+/* Thin, unobtrusive scrollbars to keep the surface quiet. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: theme(--color-zinc-700) transparent;
+}
