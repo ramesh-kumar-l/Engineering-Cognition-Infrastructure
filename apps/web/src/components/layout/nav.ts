@@ -15,5 +15,5 @@ export const NAV_ITEMS: NavItem[] = [
   { path: "/search", label: "Search", glyph: "⌕", pendingPhase: null },
   { path: "/execution", label: "Execution", glyph: "▤", pendingPhase: null },
   { path: "/reflection", label: "Reflection", glyph: "↻", pendingPhase: null },
-  { path: "/observability", label: "Observability", glyph: "❤", pendingPhase: "E" },
+  { path: "/observability", label: "Observability", glyph: "❤", pendingPhase: null },
 ];

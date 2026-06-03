@@ -1,10 +1,11 @@
 # Frontend Design — ECI Web (Premium, Provenance-First)
 
-Status: **Phase D complete** (Reflection). Phases A (scaffold + Search), B (Ingest +
-Compress), and C (Execution) done. Source of truth for all frontend phases. The web app
-is an additive `apps/web/` service that surfaces existing API provenance — it never
-re-derives evidence. One small, approved backend change was required in Phase C (see
-Phase C notes); Phase D needed **no backend change**.
+Status: **Phase E complete — all FE phases (A–E) done.** Phases A (scaffold + Search),
+B (Ingest + Compress), C (Execution), D (Reflection), E (Observability & guidance polish)
+all shipped. Source of truth for all frontend phases. The web app is an additive
+`apps/web/` service that surfaces existing API provenance — it never re-derives evidence.
+One small, approved backend change was required in Phase C (see Phase C notes); Phases D
+and E needed **no backend change**.
 
 ## Principles (inherited from system-patterns.md)
 - **Evidence before inference (AP-2)** → provenance is always visible; fail-closed UI
@@ -53,7 +54,7 @@ local components) · TanStack Query + TanStack Router · Zod · Vitest + Testing
 - B: Ingest + Compress ✅
 - C: Execution (+ WhyDrawer) ✅
 - D: Reflection (+ EvidenceList, supersession) ✅
-- E: Observability & guidance polish + full validation ← next
+- E: Observability & guidance polish + full validation ✅
 
 ## Phase B notes (Ingest + Compress)
 - `features/ingest/` — `DocumentForm` (multipart `POST /documents`), `NoteForm`
@@ -109,3 +110,21 @@ local components) · TanStack Query + TanStack Router · Zod · Vitest + Testing
 - **Env note:** a retrospective *run* does LLM pattern extraction over completed goals/tasks —
   with no Ollama / no completed work it returns `lesson_count=0` (the record still creates).
   **Manual lesson capture + supersession are LLM-free and fully functional.**
+
+## Phase E notes (Observability & guidance polish)
+- `features/observability/` — `ObservabilityRoute` assembles four panels: `MetricsSummary`
+  (live `/metrics` rollup tiles), `HealthStatus` (`/healthz`+`/readyz` probe rows), `SloPanel`
+  (5 SLO targets from `slos/slos.md`), `DocsLinks` (Swagger/ReDoc/OpenAPI/Grafana/raw-metrics).
+- `metrics.api.ts` — pure `parseMetrics(text)` over the Prometheus exposition (label order is
+  parsed positionally-independent): totals `eci_requests_total` (+ success rate = non-error/total,
+  SLO-1 style), `eci_auth_denied_total`, `eci_ingest_total`, and avg latency from
+  `eci_request_latency_seconds_{sum,count}`. NaN-safe (success rate → 1, latency → null at zero traffic).
+- `lib/api-client.ts` gained `apiText()` — raw-text fetch (auth + 401 handling) for the non-JSON
+  `/metrics` body. `health.api.ts`/`use-health.ts` gained `getReadyz`/`useReadiness`.
+- `slos.ts` mirrors the 5 SLOs with a status tag: `live` (SLO-1 computable now), `eval`
+  (release-gate: citation coverage, recall@5), `pending` (p95/p99 need prod traffic).
+- Guidance: reusable `components/layout/next-step.tsx` nudge (loop-back "Continue"); Overview
+  stage cards all flipped live + an Observability card added. The now-orphaned `PhasePlaceholder`
+  (scaffolding for pending phases) was removed.
+- Endpoints used: `GET /healthz`, `GET /readyz`, `GET /metrics`. **No backend change.** Observability
+  is **LLM-free**. Grafana deep-link points at the prod-compose default `:3000` (not proxied in dev).

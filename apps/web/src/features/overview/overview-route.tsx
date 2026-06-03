@@ -13,11 +13,12 @@ interface Stage {
 }
 
 const STAGES: Stage[] = [
-  { step: 1, title: "Ingest", blurb: "Capture documents and notes with full provenance.", to: "/ingest", live: false },
-  { step: 2, title: "Compress", blurb: "Summaries, mental models, and embeddings.", to: "/compress", live: false },
+  { step: 1, title: "Ingest", blurb: "Capture documents and notes with full provenance.", to: "/ingest", live: true },
+  { step: 2, title: "Compress", blurb: "Summaries, mental models, and embeddings.", to: "/compress", live: true },
   { step: 3, title: "Search", blurb: "Hybrid retrieval — answers with their sources.", to: "/search", live: true },
-  { step: 4, title: "Execution", blurb: "Goals and tasks linked to the evidence behind them.", to: "/execution", live: false },
-  { step: 5, title: "Reflection", blurb: "Retrospectives distil lessons from outcomes.", to: "/reflection", live: false },
+  { step: 4, title: "Execution", blurb: "Goals and tasks linked to the evidence behind them.", to: "/execution", live: true },
+  { step: 5, title: "Reflection", blurb: "Retrospectives distil lessons from outcomes.", to: "/reflection", live: true },
+  { step: 6, title: "Observability", blurb: "Live health, metrics, and the SLOs the system meets.", to: "/observability", live: true },
 ];
 
 export function OverviewRoute() {

@@ -75,3 +75,17 @@ export async function apiRequest<T = unknown>(
   const data = await res.json();
   return schema ? schema.parse(data) : (data as T);
 }
+
+/** Like apiRequest, but returns the raw response body as text (e.g. Prometheus /metrics). */
+export async function apiText(path: string, signal?: AbortSignal): Promise<string> {
+  const headers: Record<string, string> = {};
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+
+  const res = await fetch(`${env.apiBase}${path}`, { headers, signal });
+  if (res.status === 401) {
+    unauthorizedHandler?.();
+    throw new ApiError(401, await parseDetail(res));
+  }
+  if (!res.ok) throw new ApiError(res.status, await parseDetail(res));
+  return res.text();
+}

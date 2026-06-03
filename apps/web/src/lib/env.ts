@@ -5,4 +5,9 @@ export const env = {
   /** External deep links surfaced in the UI (overridable at build time). */
   docsUrl: "/api/docs",
   redocUrl: "/api/redoc",
+  openapiUrl: "/api/openapi.json",
+  /** Raw Prometheus exposition endpoint. */
+  metricsUrl: "/api/metrics",
+  /** Grafana SLO dashboard (prod compose default; not proxied). */
+  grafanaUrl: "http://localhost:3000",
 } as const;

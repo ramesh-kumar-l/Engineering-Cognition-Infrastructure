@@ -5,13 +5,13 @@ import {
   Outlet,
 } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/app-shell";
-import { PhasePlaceholder } from "@/components/layout/phase-placeholder";
 import { OverviewRoute } from "@/features/overview/overview-route";
 import { SearchRoute } from "@/features/search/search-route";
 import { IngestRoute } from "@/features/ingest/ingest-route";
 import { CompressRoute } from "@/features/compress/compress-route";
 import { ExecutionRoute } from "@/features/execution/execution-route";
 import { ReflectionRoute } from "@/features/reflection/reflection-route";
+import { ObservabilityRoute } from "@/features/observability/observability-route";
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -55,13 +55,7 @@ const reflectionRoute = createRoute({
 const observabilityRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/observability",
-  component: () => (
-    <PhasePlaceholder
-      title="Observability"
-      phase="E"
-      summary="Live health, metrics summary, SLO targets, and docs deep-links."
-    />
-  ),
+  component: ObservabilityRoute,
 });
 
 const routeTree = rootRoute.addChildren([

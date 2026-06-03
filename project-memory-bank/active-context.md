@@ -17,6 +17,19 @@ Phase 8 delivered on 2026-05-31. No active sprint.
 - Ollama CI environment — unblocks corpus benchmarks in `scripts/eval_gate.py`.
 
 ## Recently Completed
+- **2026-06-03** Frontend Phase E — Observability & guidance polish ✅ (`apps/web/`) — **all FE phases done**
+  - `features/observability/`: `ObservabilityRoute` assembles `MetricsSummary` (live `/metrics`
+    rollup), `HealthStatus` (`/healthz`+`/readyz` probes), `SloPanel` (5 SLOs from `slos.md`),
+    `DocsLinks` (Swagger/ReDoc/OpenAPI/Grafana/raw-metrics deep-links). `parseMetrics` is a pure
+    parser over Prometheus text → requests, success rate (SLO-1), avg latency, auth denials, ingest.
+  - New `apiText()` raw-text fetch helper in `api-client.ts` (auth + 401 handling) for the
+    non-JSON `/metrics` endpoint; `getReadyz`/`useReadiness` added alongside the existing health hook.
+  - Reusable `components/layout/next-step.tsx` nudge ties each screen back to the loop; Overview
+    stage cards all marked live + an Observability card added. Removed now-orphaned `PhasePlaceholder`.
+  - 17/17 Vitest pass (+2 `parseMetrics` unit tests); `npm run build` clean (295 modules). All files
+    under the 300-line cap (largest new: `metrics.api.ts` at 83). Verified live: `/healthz` `/readyz`
+    `/metrics` all 200; parser matches real exposition (handles arbitrary label order). No backend change.
+
 - **2026-06-03** Frontend Phase D — Reflection ✅ (`apps/web/`)
   - `features/reflection/`: `RetrospectivePanel` (run by cadence + notes; selectable list) +
     `LessonPanel` (status filter, manual capture, list). `LessonCard` shows confidence/scope/
