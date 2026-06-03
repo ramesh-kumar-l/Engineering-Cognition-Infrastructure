@@ -1,0 +1,2 @@
+﻿# ADR-006 Retrieval
+We chose hybrid BM25 + pgvector with RRF for offline-first retrieval.

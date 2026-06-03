@@ -1,8 +1,9 @@
 # Frontend Design — ECI Web (Premium, Provenance-First)
 
-Status: **Phase A in progress** (scaffold + Search vertical slice). Source of truth for
-all frontend phases. Backend is GA-ready and unchanged; the web app is an additive
-`apps/web/` service that surfaces existing API provenance — it never re-derives evidence.
+Status: **Phase B complete** (Ingest + Compress). Phase A (scaffold + Search slice) done.
+Source of truth for all frontend phases. Backend is GA-ready and unchanged; the web app is
+an additive `apps/web/` service that surfaces existing API provenance — it never re-derives
+evidence.
 
 ## Principles (inherited from system-patterns.md)
 - **Evidence before inference (AP-2)** → provenance is always visible; fail-closed UI
@@ -47,8 +48,23 @@ React 18 · TypeScript 5 strict · Vite · Tailwind v4 + Radix primitives (shadc
 local components) · TanStack Query + TanStack Router · Zod · Vitest + Testing Library.
 
 ## Phase status
-- A: scaffold + Search vertical slice ← current
-- B: Ingest + Compress
-- C: Execution (+ WhyDrawer)
+- A: scaffold + Search vertical slice ✅
+- B: Ingest + Compress ✅
+- C: Execution (+ WhyDrawer) ← next
 - D: Reflection
 - E: Observability & guidance polish + full validation
+
+## Phase B notes (Ingest + Compress)
+- `features/ingest/` — `DocumentForm` (multipart `POST /documents`), `NoteForm`
+  (`POST /notes`), `IngestResult` (dedup badge + provenance + "Compress this →" handoff).
+- `features/compress/` — id-driven screen: `Run compression` (`POST /compress/documents/{id}`),
+  `SummaryList` (GET summaries), `MentalModelView` (GET mental-model; 404 = not built yet),
+  `EmbedPanel` (`POST /retrieval/embed/documents/{id}` → "Go to Search").
+- Handoff Ingest→Compress via typed search param `?documentId=` (`validateSearch` on route).
+- New shared UI primitives: `ui/textarea`, `ui/select`, `ui/field`.
+- **Env prerequisite**: Compress/Embed/Search query-embedding need an LLM provider. Ollama
+  is NOT installed in this dev env → those endpoints return 5xx; the UI fails closed with a
+  clear "LLM provider (Ollama) may be unavailable" message (matches risk R-002). Ingest is
+  LLM-free and fully functional. To exercise the full loop: install Ollama + pull
+  `nomic-embed-text` (embeddings) and a chat model, or set a cloud provider env var.
+- Backend run with `ECI_IDENTITY_AUTH_DISABLED=true` (dev-bypass); no backend code changed.

@@ -10,8 +10,8 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { path: "/", label: "Overview", glyph: "◎", pendingPhase: null },
-  { path: "/ingest", label: "Ingest", glyph: "↧", pendingPhase: "B" },
-  { path: "/compress", label: "Compress", glyph: "⊟", pendingPhase: "B" },
+  { path: "/ingest", label: "Ingest", glyph: "↧", pendingPhase: null },
+  { path: "/compress", label: "Compress", glyph: "⊟", pendingPhase: null },
   { path: "/search", label: "Search", glyph: "⌕", pendingPhase: null },
   { path: "/execution", label: "Execution", glyph: "▤", pendingPhase: "C" },
   { path: "/reflection", label: "Reflection", glyph: "↻", pendingPhase: "D" },

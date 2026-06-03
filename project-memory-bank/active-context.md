@@ -17,6 +17,16 @@ Phase 8 delivered on 2026-05-31. No active sprint.
 - Ollama CI environment — unblocks corpus benchmarks in `scripts/eval_gate.py`.
 
 ## Recently Completed
+- **2026-06-03** Frontend Phase B — Ingest + Compress ✅ (`apps/web/`)
+  - Ingest screen: document upload (`POST /documents`) + note capture (`POST /notes`) with
+    dedup/provenance result card and typed `?documentId=` handoff to Compress.
+  - Compress screen: run pipeline (`POST /compress/documents/{id}`), summaries + mental-model
+    views, embed-for-search panel (`POST /retrieval/embed/...`). Fail-closed on LLM-down.
+  - 9/9 Vitest pass; `npm run build` clean. Backend run with `ECI_IDENTITY_AUTH_DISABLED=true`;
+    no backend code changed. See [frontend/frontend-design.md](frontend/frontend-design.md).
+  - Frontend Phase A (scaffold + Search slice) completed prior. Next: Phase C — Execution.
+  - Env note: Ollama not installed here → Compress/Embed/Search-embedding return 5xx by design.
+
 - **2026-05-31** Phase 8 — Production Hardening ✅
   - `packages/ingest/s3_blob_store.py` — S3BlobStore adapter; `ECI_BLOB_BACKEND=s3`; R-003 mitigated.
   - `.github/workflows/security.yml` — pip-audit + bandit + trufflehog + trivy; weekly + per-PR.

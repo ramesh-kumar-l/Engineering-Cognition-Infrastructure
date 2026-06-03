@@ -8,6 +8,8 @@ import { AppShell } from "@/components/layout/app-shell";
 import { PhasePlaceholder } from "@/components/layout/phase-placeholder";
 import { OverviewRoute } from "@/features/overview/overview-route";
 import { SearchRoute } from "@/features/search/search-route";
+import { IngestRoute } from "@/features/ingest/ingest-route";
+import { CompressRoute } from "@/features/compress/compress-route";
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -24,25 +26,16 @@ const searchRoute = createRoute({ getParentRoute: () => rootRoute, path: "/searc
 const ingestRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/ingest",
-  component: () => (
-    <PhasePlaceholder
-      title="Ingest"
-      phase="B"
-      summary="Capture documents (POST /documents) and notes (POST /notes) with dedup + provenance."
-    />
-  ),
+  component: IngestRoute,
 });
 
 const compressRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/compress",
-  component: () => (
-    <PhasePlaceholder
-      title="Compress"
-      phase="B"
-      summary="Summaries, mental models, and embeddings for ingested sources."
-    />
-  ),
+  component: CompressRoute,
+  validateSearch: (search: Record<string, unknown>): { documentId?: string } => ({
+    documentId: typeof search.documentId === "string" ? search.documentId : undefined,
+  }),
 });
 
 const executionRoute = createRoute({
