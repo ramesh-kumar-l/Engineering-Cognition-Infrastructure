@@ -138,3 +138,17 @@ Legend: ✅ done · 🟡 in progress · ⬜ not started · ⛔ blocked
 - ✅ Risk register updated — R-003 mitigated; R-004/R-005/R-006 opened and triaged; standing categories resolved.
 
 **Quality gates:** Security ✅ (SAST + dep scan + container scan in CI) · Architecture ✅ (ADR-010) · Testing ✅ (eval gate in release; integration tests in release workflow) · Observability ✅ (Grafana dashboards + Prometheus alerts + Alertmanager provisioned) · Documentation ✅ (ADR-010 + SLOs + DR runbook + eval contracts all present) · Performance ✅ (SLO thresholds defined; alert rules enforce them continuously).
+
+---
+
+## Frontend (`apps/web/`) — additive UI over the GA backend
+
+Source of truth: `project-memory-bank/frontend/frontend-design.md`. React 18 · TS strict · Vite · Tailwind v4 + Radix · TanStack Query/Router · Zod · Vitest. Hard 300-line file cap. Surfaces existing API provenance — never re-derives evidence.
+
+- ✅ **Phase A — Scaffold + Search**: app shell (left rail/top bar/live health pill), typed `fetch` client + Zod validation, dev-bypass auth, Vite `/api`→:8000 proxy. Search slice with `CitationCard` + `HasCitationsBanner` + `retrieval_stages` chip.
+- ✅ **Phase B — Ingest + Compress**: `POST /documents` + `POST /notes` with dedup/provenance card and `?documentId=` handoff; compress pipeline run, summaries, mental-model, embed-for-search. Fail-closed when LLM down.
+- ✅ **Phase C — Execution**: roadmaps → goals → tasks master-detail; status transitions; cycle-safe task dependencies; shared `WhyDrawer` rendering `GET /goals|tasks/{id}/why`. **One approved backend fix** (the only one): create paths thread `ctx.tenant_id` (lists were tenant-scoped but creates wrote NULL → empty lists); `apps/api/dev_seed.py` idempotently seeds the dev tenant+user, auth-disabled only.
+- ✅ **Phase D — Reflection**: `RetrospectivePanel` (run by cadence + notes; selectable list) + `LessonPanel` (status filter, manual capture); `LessonCard` with confidence/scope/status badges, supersession lineage, inline supersede (`POST /lessons/{id}/supersede`). New shared `EvidenceList` (fail-closed AP-2) + reusable `EvidenceEditor`. No backend change.
+- ⬜ **Phase E — Observability & guidance polish**: live `/metrics` summary, SLO panel, docs deep-links, onboarding/next-step nudges + full-experience validation.
+
+**Status:** 15/15 Vitest pass; `npm run build` clean (287 modules). Phases A–D verified live against the running API. **Env note:** Compress/Embed/Search-embedding and retrospective lesson-extraction need an LLM provider (Ollama not installed in this dev env → those paths 5xx / yield 0 lessons; UI fails closed). Ingest, Execution, and manual Reflection capture are LLM-free.

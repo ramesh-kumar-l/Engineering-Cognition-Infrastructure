@@ -182,3 +182,84 @@ export interface StatusUpdateInput {
   status: string;
   reason?: string;
 }
+
+// ── Reflection ────────────────────────────────────────────────────────────────
+/** Cadences a retrospective can run on (eci_reflection.VALID_CADENCES). */
+export const REFLECTION_CADENCES = ["weekly", "monthly", "milestone"] as const;
+export type ReflectionCadence = (typeof REFLECTION_CADENCES)[number];
+
+/** Scope a retrospective covers (router pattern: roadmap|goal|global). */
+export const RETRO_SCOPE_TYPES = ["global", "roadmap", "goal"] as const;
+export type RetroScopeType = (typeof RETRO_SCOPE_TYPES)[number];
+
+/** Confidence levels for a lesson (eci_reflection.VALID_CONFIDENCES). */
+export const LESSON_CONFIDENCES = ["low", "medium", "high"] as const;
+export type LessonConfidence = (typeof LESSON_CONFIDENCES)[number];
+
+/** Scope a lesson applies to (eci_reflection.VALID_SCOPES). */
+export const LESSON_SCOPES = ["global", "project", "component"] as const;
+export type LessonScope = (typeof LESSON_SCOPES)[number];
+
+/** A retrospective from POST/GET /retrospectives. */
+export const RetrospectiveSchema = z.object({
+  id: z.string(),
+  cadence: z.string(),
+  scope_type: z.string().nullish(),
+  scope_id: z.string().nullish(),
+  status: z.string(),
+  lesson_count: z.number(),
+  notes: z.string().nullish(),
+});
+export type Retrospective = z.infer<typeof RetrospectiveSchema>;
+export const RetrospectiveListSchema = z.array(RetrospectiveSchema);
+
+/** One piece of evidence backing a lesson (source_type: goal|task|memory_entry). */
+export const EvidenceSchema = z.object({
+  id: z.string(),
+  source_type: z.string(),
+  source_id: z.string(),
+  summary: z.string().default(""),
+});
+export type Evidence = z.infer<typeof EvidenceSchema>;
+
+/** A lesson from POST/GET /lessons and /lessons/{id}/supersede. */
+export const LessonSchema = z.object({
+  id: z.string(),
+  retrospective_id: z.string().nullish(),
+  claim: z.string(),
+  scope: z.string(),
+  confidence: z.string(),
+  status: z.string(),
+  supersedes_id: z.string().nullish(),
+  evidence: z.array(EvidenceSchema).default([]),
+});
+export type Lesson = z.infer<typeof LessonSchema>;
+export const LessonListSchema = z.array(LessonSchema);
+
+export interface CreateRetrospectiveInput {
+  cadence: string;
+  scope_type?: string;
+  scope_id?: string;
+  notes?: string;
+}
+
+export interface EvidenceInput {
+  source_type: string;
+  source_id: string;
+  summary: string;
+}
+
+export interface CreateLessonInput {
+  claim: string;
+  scope?: string;
+  confidence?: string;
+  retrospective_id?: string;
+  evidence?: EvidenceInput[];
+}
+
+export interface SupersedeLessonInput {
+  claim: string;
+  scope?: string;
+  confidence?: string;
+  evidence?: EvidenceInput[];
+}

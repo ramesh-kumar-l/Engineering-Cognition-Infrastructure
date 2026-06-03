@@ -1,9 +1,10 @@
 # Frontend Design — ECI Web (Premium, Provenance-First)
 
-Status: **Phase C complete** (Execution). Phases A (scaffold + Search) and B (Ingest +
-Compress) done. Source of truth for all frontend phases. The web app is an additive
-`apps/web/` service that surfaces existing API provenance — it never re-derives evidence.
-One small, approved backend change was required in Phase C (see Phase C notes).
+Status: **Phase D complete** (Reflection). Phases A (scaffold + Search), B (Ingest +
+Compress), and C (Execution) done. Source of truth for all frontend phases. The web app
+is an additive `apps/web/` service that surfaces existing API provenance — it never
+re-derives evidence. One small, approved backend change was required in Phase C (see
+Phase C notes); Phase D needed **no backend change**.
 
 ## Principles (inherited from system-patterns.md)
 - **Evidence before inference (AP-2)** → provenance is always visible; fail-closed UI
@@ -51,8 +52,8 @@ local components) · TanStack Query + TanStack Router · Zod · Vitest + Testing
 - A: scaffold + Search vertical slice ✅
 - B: Ingest + Compress ✅
 - C: Execution (+ WhyDrawer) ✅
-- D: Reflection ← next
-- E: Observability & guidance polish + full validation
+- D: Reflection (+ EvidenceList, supersession) ✅
+- E: Observability & guidance polish + full validation ← next
 
 ## Phase B notes (Ingest + Compress)
 - `features/ingest/` — `DocumentForm` (multipart `POST /documents`), `NoteForm`
@@ -88,3 +89,23 @@ local components) · TanStack Query + TanStack Router · Zod · Vitest + Testing
   `…0001` wasn't seeded, causing an FK violation, so added `apps/api/dev_seed.py` —
   idempotent seed of the dev tenant+user, run from the lifespan **only when auth is disabled**
   (no-op in production). New integration test: `test_create_roadmap_is_scoped_to_tenant`.
+
+## Phase D notes (Reflection)
+- `features/reflection/` — two-column layout (`reflection-route.tsx`): `RetrospectivePanel`
+  (left: run a retrospective by cadence + optional notes; selectable list with status +
+  lesson_count badges; "All lessons" resets the filter) and `LessonPanel` (right: status
+  filter, manual lesson capture, lesson list). One `reflection.api.ts` + one `use-reflection.ts`.
+- `LessonCard` renders claim + confidence/scope/status badges, supersession lineage
+  (`supersedes <id8>`), the shared `EvidenceList`, and an inline **Supersede** form (active
+  lessons only → `POST /lessons/{id}/supersede`, 409 surfaces inline).
+- New shared provenance component: `components/provenance/evidence-list.tsx` — renders a
+  lesson's `evidence[]`; **fail-closed (AP-2)**: zero evidence → explicit amber "unverifiable"
+  notice (mirrors `WhyDrawer`). `EvidenceEditor` (reused by create + supersede) adds/removes
+  evidence rows (source_type goal|task|memory_entry + UUID + summary).
+- Enums mirrored from backend: cadences (weekly/monthly/milestone), confidences
+  (low/medium/high), lesson scopes (global/project/component), lesson status (active→superseded).
+- Endpoints used: `POST/GET /retrospectives`, `POST/GET /lessons(?retrospective_id=&status=)`,
+  `POST /lessons/{id}/supersede`. **No backend change required.**
+- **Env note:** a retrospective *run* does LLM pattern extraction over completed goals/tasks —
+  with no Ollama / no completed work it returns `lesson_count=0` (the record still creates).
+  **Manual lesson capture + supersession are LLM-free and fully functional.**

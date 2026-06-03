@@ -11,6 +11,7 @@ import { SearchRoute } from "@/features/search/search-route";
 import { IngestRoute } from "@/features/ingest/ingest-route";
 import { CompressRoute } from "@/features/compress/compress-route";
 import { ExecutionRoute } from "@/features/execution/execution-route";
+import { ReflectionRoute } from "@/features/reflection/reflection-route";
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -48,13 +49,7 @@ const executionRoute = createRoute({
 const reflectionRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/reflection",
-  component: () => (
-    <PhasePlaceholder
-      title="Reflection"
-      phase="D"
-      summary="Retrospectives and lessons with evidence and supersession lineage."
-    />
-  ),
+  component: ReflectionRoute,
 });
 
 const observabilityRoute = createRoute({

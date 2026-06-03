@@ -17,6 +17,18 @@ Phase 8 delivered on 2026-05-31. No active sprint.
 - Ollama CI environment — unblocks corpus benchmarks in `scripts/eval_gate.py`.
 
 ## Recently Completed
+- **2026-06-03** Frontend Phase D — Reflection ✅ (`apps/web/`)
+  - `features/reflection/`: `RetrospectivePanel` (run by cadence + notes; selectable list) +
+    `LessonPanel` (status filter, manual capture, list). `LessonCard` shows confidence/scope/
+    status badges, supersession lineage, and an inline supersede form (active lessons only).
+  - New shared provenance component `EvidenceList` (fail-closed amber notice when a lesson has
+    no evidence); `EvidenceEditor` reused by create + supersede. No backend change required.
+  - 15/15 Vitest pass (+3 reflection hook tests); `npm run build` clean (287 modules). All
+    files under the 300-line cap. Live flow verified: retro create, manual lesson, supersede
+    (old→superseded, new active w/ `supersedes_id`), status filters.
+  - Env note: retrospective *run* needs an LLM (extracts lessons from completed goals/tasks) →
+    `lesson_count=0` without Ollama; manual lesson capture + supersession are LLM-free.
+
 - **2026-06-03** Frontend Phase C — Execution ✅ (`apps/web/`)
   - Roadmaps → goals → tasks master-detail; status transitions, task dependencies (cycle-safe),
     and a shared `WhyDrawer` (Radix Dialog) rendering `GET /goals|tasks/{id}/why` via `CitationCard`.
