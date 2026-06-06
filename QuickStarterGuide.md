@@ -76,6 +76,11 @@ ECI_LLM_OLLAMA_HOST=http://localhost:11434
 ## Step 4 — Run database migrations
 
 ```bash
+# If your environment blocks the `alembic` console script (Windows App Control),
+# use the bundled Python runner which calls Alembic's API directly:
+python scripts/alembic_runner.py upgrade -c packages/storage/alembic.ini head
+
+# Alternatively, when `alembic` is available, the canonical command is:
 uv run alembic -c packages/storage/alembic.ini upgrade head
 ```
 

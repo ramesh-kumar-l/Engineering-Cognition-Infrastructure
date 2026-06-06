@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Iterator
-
-from fastapi import Depends
-from sqlalchemy.orm import Session
+from collections.abc import Iterator
 
 from eci_compression.compression_service import CompressionService
 from eci_execution.goal_service import GoalService
@@ -13,18 +10,22 @@ from eci_execution.roadmap_service import RoadmapService
 from eci_execution.task_service import TaskService
 from eci_identity.tenant_service import TenantService
 from eci_identity.user_service import UserService
-from eci_reflection.lesson_service import LessonService
-from eci_reflection.retrospective_service import RetrospectiveService
 from eci_ingest import (
     DocumentIngestService,
     NoteIngestService,
+    SourceReadService,
     get_blob_store,
 )
 from eci_llm import EmbeddingProvider, LLMProvider, create_embedding_provider, create_llm_provider
+from eci_reflection.lesson_service import LessonService
+from eci_reflection.retrospective_service import RetrospectiveService
+from eci_retrieval.assistant_service import AssistantService
 from eci_retrieval.embedding_service import EmbeddingService
 from eci_retrieval.hybrid_retriever import HybridRetriever
 from eci_retrieval.memory_service import MemoryService
 from eci_storage import sessionmaker_for
+from fastapi import Depends
+from sqlalchemy.orm import Session
 
 # Process-level provider singletons (created on first request).
 _llm_provider: LLMProvider | None = None
@@ -71,6 +72,10 @@ def get_note_service(session: Session = Depends(get_db)) -> NoteIngestService:
     return NoteIngestService(session)
 
 
+def get_source_read_service(session: Session = Depends(get_db)) -> SourceReadService:
+    return SourceReadService(session)
+
+
 def get_compression_service(
     session: Session = Depends(get_db),
     provider: LLMProvider = Depends(get_llm_provider),
@@ -97,6 +102,13 @@ def get_memory_service(
     provider: EmbeddingProvider = Depends(get_embedding_provider),
 ) -> MemoryService:
     return MemoryService(session, provider)
+
+
+def get_assistant_service(
+    retriever: HybridRetriever = Depends(get_hybrid_retriever),
+    provider: LLMProvider = Depends(get_llm_provider),
+) -> AssistantService:
+    return AssistantService(retriever, provider)
 
 
 def get_goal_service(session: Session = Depends(get_db)) -> GoalService:

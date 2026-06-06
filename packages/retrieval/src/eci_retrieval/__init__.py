@@ -9,8 +9,10 @@ Public surface:
 - ``RetrievalError``, ``NoCitationError``, ``EmbeddingError`` — errors.
 """
 
+from eci_retrieval.assistant_service import AssistantService
 from eci_retrieval.config import RetrievalConfig, load_retrieval_config
 from eci_retrieval.dto import (
+    AssistantAnswer,
     ChunkHit,
     Citation,
     MemoryEntryInput,
@@ -19,11 +21,18 @@ from eci_retrieval.dto import (
     RetrievalResult,
 )
 from eci_retrieval.embedding_service import EmbeddingService
-from eci_retrieval.errors import EmbeddingError, NoCitationError, RetrievalError, SourceNotFoundError
+from eci_retrieval.errors import (
+    EmbeddingError,
+    NoCitationError,
+    RetrievalError,
+    SourceNotFoundError,
+)
 from eci_retrieval.hybrid_retriever import HybridRetriever
 from eci_retrieval.memory_service import MemoryService
 
 __all__ = [
+    "AssistantAnswer",
+    "AssistantService",
     "RetrievalConfig",
     "load_retrieval_config",
     "ChunkHit",

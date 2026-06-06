@@ -11,7 +11,6 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-
 DocumentKind = Literal["markdown", "text", "pdf"]
 
 
@@ -51,4 +50,39 @@ class NoteIngestResult(BaseModel):
     content_hash: str
     source: str
     deduplicated: bool
+    ingested_at: datetime
+
+
+class DocumentListItem(BaseModel):
+    """Lightweight row for browsing documents (no body)."""
+
+    id: uuid.UUID
+    kind: str
+    title: str | None
+    source: str
+    author: str | None
+    tags: list[str]
+    ingested_at: datetime
+
+
+class DocumentRead(DocumentListItem):
+    """Full document for the viewer."""
+
+    body: str
+    content_hash: str
+    metadata: dict[str, Any]
+    captured_at: datetime | None
+
+
+class NoteRead(BaseModel):
+    """Full note for the viewer."""
+
+    id: uuid.UUID
+    body: str
+    source: str
+    author: str | None
+    tags: list[str]
+    metadata: dict[str, Any]
+    content_hash: str
+    captured_at: datetime | None
     ingested_at: datetime

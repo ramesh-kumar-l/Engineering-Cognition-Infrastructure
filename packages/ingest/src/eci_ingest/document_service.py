@@ -11,6 +11,15 @@ Trace + Prometheus metrics emitted around the whole op.
 
 from __future__ import annotations
 
+import uuid
+
+from eci_observability import (
+    get_logger,
+    get_tracer,
+    ingest_bytes,
+    ingest_counter,
+)
+from eci_storage.models import Document, RawBlob
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -21,13 +30,6 @@ from eci_ingest.dto import DocumentIngestRequest, DocumentIngestResult
 from eci_ingest.errors import SourceTooLarge
 from eci_ingest.hashing import content_hash_bytes
 from eci_ingest.parsers import parse
-from eci_observability import (
-    get_logger,
-    get_tracer,
-    ingest_bytes,
-    ingest_counter,
-)
-from eci_storage.models import Document, RawBlob
 
 _log = get_logger("eci_ingest.document")
 _tracer = get_tracer("eci_ingest")
@@ -47,7 +49,10 @@ class DocumentIngestService:
         self.blob_store = blob_store or get_blob_store(self.config)
 
     def ingest(
-        self, request: DocumentIngestRequest, raw: bytes
+        self,
+        request: DocumentIngestRequest,
+        raw: bytes,
+        tenant_id: uuid.UUID | None = None,
     ) -> DocumentIngestResult:
         with _tracer.start_as_current_span("ingest.document") as span:
             span.set_attribute("ingest.kind", request.kind)
@@ -97,6 +102,7 @@ class DocumentIngestService:
                 meta={**parsed.metadata, **request.metadata},
                 captured_at=request.captured_at,
                 ingested_by=request.ingested_by,
+                tenant_id=tenant_id,
             )
             self.session.add(doc)
             self.session.flush()

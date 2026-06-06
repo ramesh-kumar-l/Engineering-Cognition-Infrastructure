@@ -5,7 +5,7 @@ description = "Engineering Cognition Infrastructure — workspace root."
 requires-python = ">=3.12,<3.13"
 
 [tool.uv.workspace]
-members = ["apps/*", "packages/*"]
+members = ["apps/api", "packages/*"]
 
 [dependency-groups]
 dev = [

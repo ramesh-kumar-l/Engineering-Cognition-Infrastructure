@@ -51,6 +51,16 @@ class RetrievalResult:
 
 
 @dataclass
+class AssistantAnswer:
+    """Grounded answer. ``answer`` is None when fail-closed (no citations)."""
+
+    query: str
+    answer: str | None
+    has_citations: bool
+    citations: list[Citation]
+
+
+@dataclass
 class MemoryEntryInput:
     title: str
     body: str

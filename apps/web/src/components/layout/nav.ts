@@ -13,6 +13,8 @@ export const NAV_ITEMS: NavItem[] = [
   { path: "/ingest", label: "Ingest", glyph: "↧", pendingPhase: null },
   { path: "/compress", label: "Compress", glyph: "⊟", pendingPhase: null },
   { path: "/search", label: "Search", glyph: "⌕", pendingPhase: null },
+  { path: "/documents", label: "Documents", glyph: "❏", pendingPhase: null },
+  { path: "/assistant", label: "Assistant", glyph: "✦", pendingPhase: null },
   { path: "/execution", label: "Execution", glyph: "▤", pendingPhase: null },
   { path: "/reflection", label: "Reflection", glyph: "↻", pendingPhase: null },
   { path: "/observability", label: "Observability", glyph: "❤", pendingPhase: null },

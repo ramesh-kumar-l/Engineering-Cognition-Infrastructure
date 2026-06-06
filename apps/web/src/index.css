@@ -1,14 +1,84 @@
 @import "tailwindcss";
 
-/* Engineering-tool aesthetic: calm dark surface, restrained accent, mono for IDs. */
-@theme {
-  --color-accent: oklch(0.72 0.13 235);
-  --color-accent-strong: oklch(0.65 0.16 235);
+/* ──────────────────────────────────────────────────────────────────────────
+   Engineering-tool aesthetic: calm surfaces, restrained accent, mono for IDs.
+   Semantic tokens are defined as runtime CSS variables (per-theme) and mapped
+   into Tailwind via `@theme inline`, so `bg-surface`, `text-fg`, etc. switch
+   live when `data-theme` flips on <html>. Dark is the default.
+   ────────────────────────────────────────────────────────────────────────── */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-fg: var(--accent-fg);
+
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+
   --font-mono: ui-monospace, "JetBrains Mono", "SFMono-Regular", Menlo, monospace;
 }
 
-:root {
+/* Dark theme (default). */
+:root,
+[data-theme="dark"] {
   color-scheme: dark;
+
+  --bg: oklch(0.165 0.006 256);
+  --surface: oklch(0.205 0.007 256);
+  --surface-raised: oklch(0.245 0.008 256);
+  --border: oklch(0.29 0.009 256);
+  --border-strong: oklch(0.37 0.011 256);
+  --fg: oklch(0.96 0.003 256);
+  --fg-muted: oklch(0.72 0.007 256);
+  --fg-subtle: oklch(0.56 0.008 256);
+
+  --accent: oklch(0.72 0.13 235);
+  --accent-strong: oklch(0.65 0.16 235);
+  --accent-fg: oklch(0.98 0.01 235);
+
+  --success: oklch(0.76 0.15 158);
+  --success-soft: oklch(0.27 0.05 158);
+  --warning: oklch(0.82 0.12 85);
+  --warning-soft: oklch(0.3 0.05 85);
+  --danger: oklch(0.7 0.18 22);
+  --danger-soft: oklch(0.3 0.08 22);
+}
+
+/* Light theme. */
+[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: oklch(0.985 0.002 256);
+  --surface: oklch(1 0 0);
+  --surface-raised: oklch(0.965 0.004 256);
+  --border: oklch(0.9 0.005 256);
+  --border-strong: oklch(0.83 0.007 256);
+  --fg: oklch(0.24 0.012 256);
+  --fg-muted: oklch(0.46 0.012 256);
+  --fg-subtle: oklch(0.62 0.01 256);
+
+  --accent: oklch(0.6 0.15 235);
+  --accent-strong: oklch(0.52 0.17 235);
+  --accent-fg: oklch(0.99 0.005 235);
+
+  --success: oklch(0.55 0.15 158);
+  --success-soft: oklch(0.94 0.04 158);
+  --warning: oklch(0.65 0.13 75);
+  --warning-soft: oklch(0.95 0.05 85);
+  --danger: oklch(0.55 0.2 25);
+  --danger-soft: oklch(0.95 0.04 25);
 }
 
 html,
@@ -18,12 +88,14 @@ body,
 }
 
 body {
-  @apply bg-zinc-950 text-zinc-100 antialiased;
+  background-color: var(--bg);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
   font-feature-settings: "cv02", "cv03", "cv04";
 }
 
 /* Thin, unobtrusive scrollbars to keep the surface quiet. */
 * {
   scrollbar-width: thin;
-  scrollbar-color: theme(--color-zinc-700) transparent;
+  scrollbar-color: var(--border-strong) transparent;
 }

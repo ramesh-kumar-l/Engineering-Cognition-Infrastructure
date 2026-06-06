@@ -19,6 +19,16 @@ export function setAuthToken(token: string | null): void {
   authToken = token;
 }
 
+/** Current Bearer token, for callers that issue their own fetch (e.g. streaming). */
+export function getAuthToken(): string | null {
+  return authToken;
+}
+
+/** Invoke the registered 401 handler (used by non-apiRequest fetch paths). */
+export function notifyUnauthorized(): void {
+  unauthorizedHandler?.();
+}
+
 /** Register a callback invoked whenever the API returns 401. */
 export function setUnauthorizedHandler(handler: (() => void) | null): void {
   unauthorizedHandler = handler;

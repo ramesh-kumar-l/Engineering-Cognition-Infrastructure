@@ -70,6 +70,51 @@ export interface NoteIngestRequest {
   tags?: string[];
 }
 
+// ── Assistant ───────────────────────────────────────────────────────────────
+/** The terminal `citations` frame of POST /assistant/stream (and /ask shape). */
+export const AssistantCitationsSchema = z.object({
+  has_citations: z.boolean(),
+  citations: z.array(CitationSchema).default([]),
+});
+export type AssistantCitations = z.infer<typeof AssistantCitationsSchema>;
+
+// ── Documents / Notes (read) ────────────────────────────────────────────────
+/** One row from GET /documents (browse list — no body). */
+export const DocumentListItemSchema = z.object({
+  id: z.string(),
+  kind: z.string(),
+  title: z.string().nullish(),
+  source: z.string(),
+  author: z.string().nullish(),
+  tags: z.array(z.string()).default([]),
+  ingested_at: z.string(),
+});
+export type DocumentListItem = z.infer<typeof DocumentListItemSchema>;
+export const DocumentListSchema = z.array(DocumentListItemSchema);
+
+/** Full document from GET /documents/{id} (powers the viewer). */
+export const DocumentDetailSchema = DocumentListItemSchema.extend({
+  body: z.string().default(""),
+  content_hash: z.string(),
+  metadata: z.record(z.string(), z.unknown()).default({}),
+  captured_at: z.string().nullish(),
+});
+export type DocumentDetail = z.infer<typeof DocumentDetailSchema>;
+
+/** Full note from GET /notes/{id}. */
+export const NoteDetailSchema = z.object({
+  id: z.string(),
+  body: z.string().default(""),
+  source: z.string(),
+  author: z.string().nullish(),
+  tags: z.array(z.string()).default([]),
+  metadata: z.record(z.string(), z.unknown()).default({}),
+  content_hash: z.string(),
+  captured_at: z.string().nullish(),
+  ingested_at: z.string(),
+});
+export type NoteDetail = z.infer<typeof NoteDetailSchema>;
+
 // ── Compress ──────────────────────────────────────────────────────────────
 /** Outcome of POST /compress/documents|notes/{id}. */
 export const CompressResponseSchema = z.object({

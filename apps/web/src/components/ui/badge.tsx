@@ -4,10 +4,10 @@ import { cn } from "@/lib/cn";
 type Tone = "neutral" | "good" | "warn" | "info";
 
 const tones: Record<Tone, string> = {
-  neutral: "border-zinc-700 bg-zinc-800/50 text-zinc-300",
-  good: "border-emerald-800 bg-emerald-950/50 text-emerald-300",
-  warn: "border-amber-800 bg-amber-950/50 text-amber-300",
-  info: "border-sky-800 bg-sky-950/50 text-sky-300",
+  neutral: "border-border bg-surface-raised text-fg-muted",
+  good: "border-success/40 bg-success-soft text-success",
+  warn: "border-warning/40 bg-warning-soft text-warning",
+  info: "border-accent/40 bg-accent/10 text-accent",
 };
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {

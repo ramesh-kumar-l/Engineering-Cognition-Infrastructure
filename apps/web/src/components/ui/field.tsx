@@ -12,9 +12,9 @@ export function Field({
 }) {
   return (
     <label className="block space-y-1.5">
-      <span className="text-xs font-medium text-zinc-400">{label}</span>
+      <span className="text-xs font-medium text-fg-muted">{label}</span>
       {children}
-      {hint && <span className="block text-xs text-zinc-500">{hint}</span>}
+      {hint && <span className="block text-xs text-fg-subtle">{hint}</span>}
     </label>
   );
 }

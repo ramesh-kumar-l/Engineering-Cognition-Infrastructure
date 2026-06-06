@@ -24,6 +24,7 @@ from eci_llm.protocol import (
     LLMProvider,
     LLMRequest,
     LLMResponse,
+    StreamingLLMProvider,
 )
 
 __all__ = [
@@ -42,4 +43,5 @@ __all__ = [
     "LLMProvider",
     "LLMRequest",
     "LLMResponse",
+    "StreamingLLMProvider",
 ]

@@ -72,6 +72,10 @@ def create_app() -> FastAPI:
     app.include_router(retrieval.router)
     app.include_router(memory.router)
 
+    from eci_api.routers import assistant
+
+    app.include_router(assistant.router)
+
     from eci_api.routers import goals, roadmaps, tasks
 
     app.include_router(roadmaps.router)

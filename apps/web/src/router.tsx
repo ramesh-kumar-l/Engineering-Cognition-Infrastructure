@@ -9,9 +9,12 @@ import { OverviewRoute } from "@/features/overview/overview-route";
 import { SearchRoute } from "@/features/search/search-route";
 import { IngestRoute } from "@/features/ingest/ingest-route";
 import { CompressRoute } from "@/features/compress/compress-route";
+import { DocumentsRoute } from "@/features/documents/documents-route";
+import { DocumentDetailRoute } from "@/features/documents/document-detail-route";
 import { ExecutionRoute } from "@/features/execution/execution-route";
 import { ReflectionRoute } from "@/features/reflection/reflection-route";
 import { ObservabilityRoute } from "@/features/observability/observability-route";
+import { AssistantRoute } from "@/features/assistant/assistant-route";
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -40,6 +43,18 @@ const compressRoute = createRoute({
   }),
 });
 
+const documentsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/documents",
+  component: DocumentsRoute,
+});
+
+const documentDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/documents/$id",
+  component: DocumentDetailRoute,
+});
+
 const executionRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/execution",
@@ -58,14 +73,23 @@ const observabilityRoute = createRoute({
   component: ObservabilityRoute,
 });
 
+const assistantRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/assistant",
+  component: AssistantRoute,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   searchRoute,
   ingestRoute,
   compressRoute,
+  documentsRoute,
+  documentDetailRoute,
   executionRoute,
   reflectionRoute,
   observabilityRoute,
+  assistantRoute,
 ]);
 
 export const router = createRouter({ routeTree, defaultPreload: "intent" });

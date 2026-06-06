@@ -16,8 +16,8 @@ export function HasCitationsBanner({
       className={cn(
         "flex items-center gap-2.5 rounded-lg border px-3.5 py-2.5 text-sm",
         hasCitations
-          ? "border-emerald-900 bg-emerald-950/40 text-emerald-200"
-          : "border-amber-900 bg-amber-950/40 text-amber-200",
+          ? "border-success/40 bg-success-soft text-success"
+          : "border-warning/40 bg-warning-soft text-warning",
       )}
     >
       <span aria-hidden className="text-base leading-none">

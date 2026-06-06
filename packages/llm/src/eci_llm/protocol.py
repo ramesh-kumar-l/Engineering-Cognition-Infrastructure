@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
@@ -49,6 +50,18 @@ class LLMProvider(Protocol):
     def model_name(self) -> str: ...
 
     def complete(self, request: LLMRequest) -> LLMResponse: ...
+
+
+@runtime_checkable
+class StreamingLLMProvider(Protocol):
+    """Optional capability: incremental token streaming.
+
+    Kept separate from ``LLMProvider`` so providers that only support buffered
+    completion (and the callers that only need it) are unaffected. Callers detect
+    support with ``isinstance(provider, StreamingLLMProvider)``.
+    """
+
+    def stream_complete(self, request: LLMRequest) -> Iterator[str]: ...
 
 
 @runtime_checkable

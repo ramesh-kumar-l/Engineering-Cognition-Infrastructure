@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 import time
+from collections.abc import Iterator
 
 import httpx
 
@@ -59,6 +61,39 @@ class OllamaProvider:
             completion_tokens=int(data.get("eval_count", 0)),
             latency_ms=latency_ms,
         )
+
+    def stream_complete(self, request: LLMRequest) -> Iterator[str]:
+        """Yield content deltas as Ollama produces them (NDJSON stream)."""
+        messages: list[dict[str, str]] = []
+        if request.system:
+            messages.append({"role": "system", "content": request.system})
+        messages.extend({"role": m.role, "content": m.content} for m in request.messages)
+
+        payload: dict[str, object] = {
+            "model": self._model,
+            "messages": messages,
+            "stream": True,
+            "options": {
+                "temperature": request.temperature,
+                "num_predict": request.max_tokens,
+            },
+        }
+        try:
+            with self._client.stream("POST", f"{self._host}/api/chat", json=payload) as resp:
+                resp.raise_for_status()
+                for line in resp.iter_lines():
+                    if not line:
+                        continue
+                    data = json.loads(line)
+                    message = data.get("message")
+                    if isinstance(message, dict):
+                        delta = message.get("content")
+                        if delta:
+                            yield str(delta)
+                    if data.get("done"):
+                        break
+        except httpx.HTTPError as exc:
+            raise LLMProviderError(f"Ollama HTTP error: {exc}") from exc
 
     def close(self) -> None:
         self._client.close()

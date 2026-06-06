@@ -2,6 +2,14 @@
 
 from __future__ import annotations
 
+import uuid
+
+from eci_observability import (
+    get_logger,
+    get_tracer,
+    ingest_counter,
+)
+from eci_storage.models import Note
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -10,12 +18,6 @@ from eci_ingest.config import IngestConfig, load_ingest_config
 from eci_ingest.dto import NoteIngestRequest, NoteIngestResult
 from eci_ingest.errors import SourceTooLarge
 from eci_ingest.hashing import content_hash_text
-from eci_observability import (
-    get_logger,
-    get_tracer,
-    ingest_counter,
-)
-from eci_storage.models import Note
 
 _log = get_logger("eci_ingest.note")
 _tracer = get_tracer("eci_ingest")
@@ -30,7 +32,9 @@ class NoteIngestService:
         self.session = session
         self.config = config or load_ingest_config()
 
-    def ingest(self, request: NoteIngestRequest) -> NoteIngestResult:
+    def ingest(
+        self, request: NoteIngestRequest, tenant_id: uuid.UUID | None = None
+    ) -> NoteIngestResult:
         with _tracer.start_as_current_span("ingest.note") as span:
             span.set_attribute("ingest.source", request.source)
             span.set_attribute("ingest.size_bytes", len(request.body.encode("utf-8")))
@@ -83,6 +87,7 @@ class NoteIngestService:
                 captured_at=request.captured_at,
                 ingested_by=request.ingested_by,
                 content_hash=hash_hex,
+                tenant_id=tenant_id,
             )
             self.session.add(note)
             self.session.flush()

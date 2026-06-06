@@ -5,10 +5,10 @@ type Variant = "primary" | "ghost" | "outline";
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-[--color-accent-strong] text-zinc-50 hover:brightness-110 focus-visible:ring-[--color-accent]",
-  ghost: "text-zinc-300 hover:bg-zinc-800/60 focus-visible:ring-zinc-600",
+    "bg-accent-strong text-accent-fg hover:brightness-110 focus-visible:ring-accent",
+  ghost: "text-fg-muted hover:bg-surface-raised hover:text-fg focus-visible:ring-border-strong",
   outline:
-    "border border-zinc-700 text-zinc-200 hover:bg-zinc-800/40 focus-visible:ring-zinc-600",
+    "border border-border text-fg hover:bg-surface-raised focus-visible:ring-border-strong",
 };
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
